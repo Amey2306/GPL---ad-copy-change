@@ -1,0 +1,200 @@
+import { GoogleGenAI, Type } from '@google/genai';
+import { AdCopy, UploadSource } from '../types';
+
+// Utility to convert file to a base64 string and format for Gemini API
+const fileToGenerativePart = async (file: File) => {
+    const base64EncodedDataPromise = new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+            const result = reader.result as string;
+            // remove the `data:mime/type;base64,` prefix
+            resolve(result.split(',')[1]); 
+        };
+        reader.onerror = (error) => reject(error);
+        reader.readAsDataURL(file);
+    });
+
+    const base64Data = await base64EncodedDataPromise;
+
+    return {
+        inlineData: {
+            data: base64Data,
+            mimeType: file.type,
+        },
+    };
+};
+
+const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+
+export const analyzeCreativeAndCopy = async (imageFile: File, adCopyText: string): Promise<string> => {
+    const imagePart = await fileToGenerativePart(imageFile);
+    const textPart = { text: `Analyze the provided ad creative image and the existing ad copy for Godrej Properties. Provide a concise analysis focusing on key messages, copy-image synergy, and specific areas for improvement.
+
+Existing ad copy:
+${adCopyText}` };
+
+    const response = await ai.models.generateContent({
+        model: 'gemini-2.5-flash',
+        contents: [{ parts: [imagePart, textPart] }],
+    });
+
+    return response.text;
+};
+
+
+export const generateAdCopy = async (analysis: string, originalGoogleAds: AdCopy[], originalMetaAds: AdCopy[]): Promise<{google: AdCopy[], meta: AdCopy[]}> => {
+    const prompt = `Based on the following analysis, generate updated ad copy for Google Ads and Meta Ads for Godrej Properties.
+Maintain the exact same structure (same number of fields and same field names) as the original copy.
+Strictly adhere to character limits: Google headlines MUST be under 30 characters, descriptions under 90.
+The tone should be aspirational, focusing on luxury, lifestyle, and property benefits.
+
+**Analysis:**
+${analysis}
+
+**Original Google Ads:**
+${JSON.stringify(originalGoogleAds)}
+
+**Original Meta Ads:**
+${JSON.stringify(originalMetaAds)}
+
+Return ONLY a JSON object with two keys: "google" and "meta", each containing an array of ad copy objects with "field" and "text" fields.
+`;
+
+    const adCopySchema = {
+        type: Type.OBJECT,
+        properties: {
+            field: { type: Type.STRING },
+            text: { type: Type.STRING },
+        },
+        required: ['field', 'text']
+    };
+
+    const response = await ai.models.generateContent({
+        model: "gemini-2.5-flash",
+        contents: [{parts: [{text: prompt}]}],
+        config: {
+            responseMimeType: "application/json",
+            responseSchema: {
+                type: Type.OBJECT,
+                properties: {
+                    google: {
+                        type: Type.ARRAY,
+                        items: adCopySchema
+                    },
+                    meta: {
+                        type: Type.ARRAY,
+                        items: adCopySchema
+                    }
+                },
+                required: ['google', 'meta']
+            }
+        }
+    });
+
+    const jsonText = response.text.trim();
+    return JSON.parse(jsonText);
+};
+
+
+export const generateAdCopiesFromSource = async (imageFile: File, source: UploadSource): Promise<{ analysis: string, google: AdCopy[], meta: AdCopy[]}> => {
+    const imagePart = await fileToGenerativePart(imageFile);
+    let sourceInfo: string;
+    let sourcePart: { inlineData: { data: string; mimeType: string; } } | null = null;
+
+    if (source.type === 'file' && source.content instanceof File) {
+        sourceInfo = `the provided document named "${source.content.name}"`;
+        sourcePart = await fileToGenerativePart(source.content);
+    } else if (source.type === 'url') {
+        sourceInfo = `the content from the YouTube URL: ${source.content}`;
+    } else {
+        sourceInfo = `the following text context`;
+    }
+
+    const textPrompt = `You are an expert ad copywriter for Godrej Properties, a luxury real estate developer in India. Your task is to generate brand new ad copy for Google Ads and Meta Ads based on the provided creative image and source material.
+
+**Source Material:** Analyze ${sourceInfo}.
+${source.type === 'text' ? `\n**Source Text:**\n${source.content}` : ''}
+
+**Task:**
+1.  Analyze the creative image and the source material to identify key USPs, offers, and property highlights.
+2.  Create compelling ad copy for both Google and Meta platforms.
+3.  **Strictly adhere to character limits:** Google headlines MUST be 30 characters or less. Google descriptions MUST be 90 characters or less.
+4.  The tone should be professional, aspirational, and persuasive, highlighting luxury and lifestyle benefits.
+5.  Structure the output as a JSON object with "analysis", "google", and "meta" keys.
+    -   The "analysis" key should contain a concise summary of your findings from the source material.
+    -   For Google, provide 3 headlines and 2 descriptions.
+    -   For Meta, provide a Primary Text, a Headline, and a Description.
+
+Return ONLY the JSON object.`;
+
+    const parts = [imagePart, { text: textPrompt }];
+    if (sourcePart) {
+        parts.push(sourcePart);
+    }
+
+    const adCopySchema = {
+        type: Type.OBJECT,
+        properties: {
+            field: { type: Type.STRING },
+            text: { type: Type.STRING },
+        },
+        required: ['field', 'text']
+    };
+
+    const response = await ai.models.generateContent({
+        model: "gemini-2.5-pro",
+        contents: [{ parts }],
+        config: {
+            responseMimeType: "application/json",
+            responseSchema: {
+                type: Type.OBJECT,
+                properties: {
+                    analysis: { type: Type.STRING, description: 'A concise analysis of the source material.' },
+                    google: {
+                        type: Type.ARRAY,
+                        items: adCopySchema
+                    },
+                    meta: {
+                        type: Type.ARRAY,
+                        items: adCopySchema
+                    }
+                },
+                required: ['analysis', 'google', 'meta']
+            },
+            thinkingConfig: { thinkingBudget: 32768 }
+        }
+    });
+    
+    const jsonText = response.text.trim();
+    return JSON.parse(jsonText);
+};
+
+
+export const verifyUrl = async (url: string, analysis: string): Promise<{ verified: boolean, reason: string }> => {
+    const prompt = `I need you to act as a verification agent. A new marketing creative has been analyzed for a real estate project. Your task is to check if the website at the provided URL reflects the key information from this analysis.
+
+**Analysis of the New Creative:**
+---
+${analysis}
+---
+
+**Your Task:**
+1.  Access the content of the URL: ${url}
+2.  Compare the website's content against the key points in the analysis.
+3.  Determine if the website has been updated to reflect the new marketing information.
+4.  Respond with a JSON object containing two keys: "verified" (a boolean, true if the page is updated, false otherwise) and "reason" (a concise string explaining your finding, e.g., "Verified: The new price and offer are both mentioned on the page." or "Not Verified: The website still shows the old pricing and does not mention the new campaign offer.").
+
+Return ONLY the JSON object.`;
+
+    const response = await ai.models.generateContent({
+        model: "gemini-2.5-flash",
+        contents: [{parts: [{text: prompt}]}],
+        config: {
+            tools: [{ googleSearch: {} }],
+        },
+    });
+
+    const jsonText = response.text.trim();
+    const cleanedJsonText = jsonText.replace(/^```json\s*/, '').replace(/\s*```$/, '');
+    return JSON.parse(cleanedJsonText);
+};

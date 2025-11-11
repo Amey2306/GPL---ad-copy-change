@@ -1,0 +1,5 @@
+{
+  "name": "Godrej Properties - Digital Asset Manager",
+  "description": "An application for Godrej Properties to manage digital marketing assets. Users can upload new creatives, analyze them with Gemini to identify updates, and automatically generate revised ad copy for Google and Meta campaigns for internal review and approval.",
+  "requestFramePermissions": []
+}

@@ -151,7 +151,6 @@ function App() {
             
             case AppState.ANALYZING:
             case AppState.ANALYSIS_COMPLETE:
-            case AppState.APPROVAL_SENT:
                 if (!creativeFile || !analysis) {
                     handleReset(); // Should not happen, but as a safeguard
                     return null;
@@ -171,6 +170,7 @@ function App() {
                     />
                 );
 
+            case AppState.APPROVAL_SENT:
             case AppState.VERIFYING_CHANGES:
             case AppState.VERIFICATION_COMPLETE:
                  if (!creativeFile || !analysis || !selectedProject) {

@@ -1,6 +1,27 @@
+// types.ts
+
 export interface AdCopy {
     field: string;
     text: string;
+}
+
+export interface Project {
+    name: string;
+    city: string;
+    location: string;
+    links: {
+        overviewPage?: string;
+        landingPage?: string;
+        teaserLandingPage?: string;
+        digitalCollaterals?: string;
+        alternateCollaterals?: string;
+        eoiPortal?: string;
+        internationalPage?: string;
+        ppLandingPage?: string;
+        ppLandingPageNew?: string;
+        rcpLandingPage?: string;
+        eoiWindow?: string;
+    };
 }
 
 export interface ProjectLink {
@@ -8,23 +29,13 @@ export interface ProjectLink {
     url: string;
 }
 
-export interface Project {
-    name: string;
-    links: ProjectLink[];
-}
-
-export type UploadSource = 
-    | { type: 'text'; content: string }
-    | { type: 'file'; content: File }
-    | { type: 'url'; content: string };
-
-export interface VerificationResult {
-    url: string;
-    name: string;
-    verified: boolean;
-    reason: string;
-    error?: boolean;
-}
+export type UploadSource = {
+    type: 'text' | 'url';
+    content: string;
+} | {
+    type: 'file';
+    content: File;
+};
 
 export enum LogType {
     ANALYSIS = 'ANALYSIS',
@@ -43,14 +54,22 @@ export interface LogEntry {
 }
 
 export enum AppState {
-    UPLOAD = 'upload',
-    REVIEW = 'review',
-    APPROVAL_PENDING = 'approval_pending',
-    APPROVED = 'approved',
-    VERIFY = 'verify',
+    UPLOAD = 'UPLOAD',
+    REVIEW = 'REVIEW',
+    APPROVAL_PENDING = 'APPROVAL_PENDING',
+    APPROVED = 'APPROVED',
+    VERIFY = 'VERIFY',
 }
 
 export interface ApprovalEvent {
     status: 'Sent' | 'Approved';
     timestamp: Date;
+}
+
+export interface VerificationResult {
+    url: string;
+    name: string;
+    verified: boolean;
+    reason: string;
+    error?: boolean;
 }

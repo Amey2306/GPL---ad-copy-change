@@ -197,20 +197,19 @@ Return ONLY the JSON object.`;
 
 
 export const verifyUrl = async (url: string, analysis: string): Promise<{ verified: boolean, reason: string }> => {
-    const prompt = `I need you to act as a verification agent. A new marketing creative has been analyzed for a real estate project. Your task is to check if the website at the provided URL reflects the key information from this analysis.
-
-**Analysis of the New Creative:**
+    const prompt = `You are a data processing API. Your sole function is to analyze a web page and return a structured JSON response.
+Analyze the content of the URL: ${url}
+Compare it against the key points in the following analysis:
 ---
+ANALYSIS:
 ${analysis}
 ---
-
-**Your Task:**
-1.  Access the content of the URL: ${url}
-2.  Compare the website's content against the key points in the analysis.
-3.  Determine if the website has been updated to reflect the new marketing information.
-4.  Respond with a JSON object containing two keys: "verified" (a boolean, true if the page is updated, false otherwise) and "reason" (a concise string explaining your finding, e.g., "Verified: The new price and offer are both mentioned on the page." or "Not Verified: The website still shows the old pricing and does not mention the new campaign offer.").
-
-Return ONLY the JSON object.`;
+After analyzing, you MUST respond with ONLY a raw JSON object. Do not include any text before or after the JSON. Do not use markdown. Your entire response must be a single valid JSON object matching this schema:
+{
+  "verified": <boolean>,
+  "reason": "<string: A concise, one-sentence explanation for your finding.>"
+}
+`;
 
     try {
         const response = await ai.models.generateContent({
@@ -221,14 +220,30 @@ Return ONLY the JSON object.`;
             },
         });
 
-        const jsonText = response.text.trim();
-        const cleanedJsonText = jsonText.replace(/^```json\s*/, '').replace(/\s*```$/, '');
-        return JSON.parse(cleanedJsonText);
+        const text = response.text.trim();
+        
+        // Find the JSON part of the response, which might be embedded in other text
+        const jsonMatch = text.match(/\{[\s\S]*\}/);
+
+        if (jsonMatch && jsonMatch[0]) {
+            try {
+                // We found a JSON-like string, try to parse it
+                return JSON.parse(jsonMatch[0]);
+            } catch (parseError) {
+                 console.error(`Gemini API Error (verifyUrl for ${url}): Failed to parse extracted JSON.`, { text, parseError });
+                 const reason = `Verification failed: Model returned malformed data.`;
+                 return { verified: false, reason };
+            }
+        } else {
+             // The response did not contain a JSON object at all.
+            console.error(`Gemini API Error (verifyUrl for ${url}): No JSON object found in the response.`, { text });
+            const reason = `Verification failed: Model provided a conversational response instead of data. Response: "${text.substring(0, 80)}..."`;
+            return { verified: false, reason };
+        }
+
     } catch (error) {
         console.error(`Gemini API Error (verifyUrl for ${url}):`, error);
-        if (error instanceof SyntaxError) {
-             throw new Error(`Verification failed: Gemini returned an unexpected response for this URL.`);
-        }
-        throw new Error(`Verification failed: Could not access or process this URL.`);
+        // This will catch network errors or other API-level failures
+        throw new Error(`Verification failed: Could not process this URL due to a network or API error.`);
     }
 };

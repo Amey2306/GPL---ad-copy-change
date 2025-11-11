@@ -16,210 +16,351 @@ export const INITIAL_META_ADS: AdCopy[] = [
 
 export const PROJECTS: Project[] = [
     {
-        name: 'Godrej Sky Terraces, Chembur',
-        links: [
-            { name: 'Official Website', url: 'https://www.godrejproperties.com/mumbai/chembur/godrej-sky-terraces' },
-            { name: 'Alternate Page', url: 'https://www.godrejproperties.com/finding-space/mumbai/residential/chembur/godrej-sky-terraces' }
-        ]
+        name: 'Godrej Sky Terraces',
+        city: 'Mumbai',
+        location: 'Chembur',
+        links: {
+            overviewPage: 'https://www.godrejproperties.com/mumbai/chembur/godrej-sky-terraces',
+            landingPage: 'https://www.godrejproperties.com/finding-space/mumbai/residential/chembur/godrej-sky-terraces',
+        }
     },
     {
-        name: 'Godrej Avenue Eleven, Mahalaxmi',
-        links: [
-            { name: 'Official Website', url: 'https://www.godrejproperties.com/mumbai/mahalaxmi/godrej-avenue-eleven' },
-            { name: 'Alternate Page', url: 'https://www.godrejproperties.com/finding-space/mumbai/residential/mahalaxmi/godrej-avenue-eleven' }
-        ]
+        name: 'Godrej Avenue Eleven',
+        city: 'Mumbai',
+        location: 'Mahalaxmi',
+        links: {
+            overviewPage: 'https://www.godrejproperties.com/mumbai/mahalaxmi/godrej-avenue-eleven',
+            landingPage: 'https://www.godrejproperties.com/finding-space/mumbai/residential/mahalaxmi/godrej-avenue-eleven',
+        }
     },
     {
-        name: 'Godrej Ascend, Kolshet Road, Thane',
-        links: [
-            { name: 'Official Website', url: 'https://www.godrejproperties.com/mumbai/thane/kolshet-road/godrej-ascend' },
-            { name: 'Alternate Page', url: 'https://www.godrejproperties.com/finding-space/mumbai/residential/thane/godrej-ascend' }
-        ]
+        name: 'Godrej Ascend',
+        city: 'Mumbai',
+        location: 'Kolshet Road, Thane',
+        links: {
+            overviewPage: 'https://www.godrejproperties.com/mumbai/thane/kolshet-road/godrej-ascend',
+            landingPage: 'https://www.godrejproperties.com/finding-space/mumbai/residential/thane/godrej-ascend',
+        }
     },
     {
-        name: 'Godrej Horizon, Dadar-Wadala',
-        links: [
-            { name: 'Official Website', url: 'https://www.godrejproperties.com/mumbai/wadala/godrej-horizon' },
-            { name: 'Alternate Page', url: 'https://www.godrejproperties.com/finding-space/mumbai/residential/dadar-wadala-1/' }
-        ]
+        name: 'Godrej Horizon',
+        city: 'Mumbai',
+        location: 'Dadar-Wadala',
+        links: {
+            overviewPage: 'https://www.godrejproperties.com/mumbai/wadala/godrej-horizon',
+            landingPage: 'https://www.godrejproperties.com/finding-space/mumbai/residential/dadar-wadala-1/',
+        }
     },
     {
-        name: 'Godrej Five Gardens, Matunga',
-        links: [
-            { name: 'Official Website', url: 'https://www.godrejproperties.com/mumbai/matunga/godrej-five-gardens' },
-            { name: 'Alternate Page', url: 'https://www.godrejproperties.com/finding-space/mumbai/residential/matunga/godrej-five-gardens' }
-        ]
+        name: 'Godrej Five Gardens',
+        city: 'Mumbai',
+        location: 'Matunga',
+        links: {
+            overviewPage: 'https://www.godrejproperties.com/mumbai/matunga/godrej-five-gardens',
+            landingPage: 'https://www.godrejproperties.com/finding-space/mumbai/residential/matunga/godrej-five-gardens',
+        }
     },
     {
-        name: 'Godrej RKS, Chembur',
-        links: [
-            { name: 'Official Website', url: 'https://www.godrejproperties.com/mumbai/chembur/godrej-rks' },
-            { name: 'Alternate Page', url: 'https://www.godrejproperties.com/finding-space/mumbai/residential/chembur/godrej-rks' }
-        ]
+        name: 'Godrej RKS',
+        city: 'Mumbai',
+        location: 'Chembur',
+        links: {
+            overviewPage: 'https://www.godrejproperties.com/mumbai/chembur/godrej-rks',
+            landingPage: 'https://www.godrejproperties.com/finding-space/mumbai/residential/chembur/godrej-rks',
+        }
     },
     {
-        name: 'Godrej Bliss, Kandivali',
-        links: [
-            { name: 'Official Website', url: 'https://www.godrejproperties.com/mumbai/kandivali/godrej-bliss' },
-            { name: 'Alternate Page', url: 'https://www.godrejproperties.com/finding-space/mumbai/residential/kandivali/godrej-bliss' }
-        ]
+        name: 'Godrej Bliss',
+        city: 'Mumbai',
+        location: 'Kandivali',
+        links: {
+            overviewPage: 'https://www.godrejproperties.com/mumbai/kandivali/godrej-bliss',
+            landingPage: 'https://www.godrejproperties.com/finding-space/mumbai/residential/kandivali/godrej-bliss',
+        }
     },
     {
-        name: 'Godrej Nirvaan, Thane-Extension',
-        links: [
-            { name: 'Official Website', url: 'https://www.godrejproperties.com/mumbai/thane-extension/godrej-nirvaan' },
-            { name: 'Alternate Page', url: 'https://www.godrejproperties.com/finding-space/mumbai/residential/thane-extension/' }
-        ]
+        name: 'Godrej Nirvaan',
+        city: 'Mumbai',
+        location: 'Thane Extension',
+        links: {
+            overviewPage: 'https://www.godrejproperties.com/mumbai/thane-extension/godrej-nirvaan',
+            landingPage: 'https://www.godrejproperties.com/finding-space/mumbai/residential/thane-extension/',
+        }
     },
     {
-        name: 'Godrej Urban Park, Chandivali',
-        links: [
-            { name: 'Official Website', url: 'https://www.godrejproperties.com/mumbai/chandivali/godrej-urban-park' },
-            { name: 'Alternate Page', url: 'https://www.godrejproperties.com/finding-space/mumbai/residential/chandivali-1/godrej-urban-park' }
-        ]
+        name: 'Godrej Urban Park',
+        city: 'Mumbai',
+        location: 'Chandivali',
+        links: {
+            overviewPage: 'https://www.godrejproperties.com/mumbai/chandivali/godrej-urban-park',
+            landingPage: 'https://www.godrejproperties.com/finding-space/mumbai/residential/chandivali-1/godrej-urban-park',
+        }
     },
     {
-        name: 'Godrej Tranquil, Kandivali',
-        links: [
-            { name: 'Official Website', url: 'https://www.godrejproperties.com/mumbai/kandivali/godrej-tranquil' },
-            { name: 'Alternate Page', url: 'https://www.godrejproperties.com/finding-space/mumbai/residential/kandivali/godrej-tranquil' }
-        ]
+        name: 'Godrej Tranquil',
+        city: 'Mumbai',
+        location: 'Kandivali',
+        links: {
+            overviewPage: 'https://www.godrejproperties.com/mumbai/kandivali/godrej-tranquil',
+            landingPage: 'https://www.godrejproperties.com/finding-space/mumbai/residential/kandivali/godrej-tranquil',
+        }
     },
     {
-        name: 'Godrej Nest, Kandivali',
-        links: [
-            { name: 'Official Website', url: 'https://www.godrejproperties.com/mumbai/kandivali/godrej-nest' },
-            { name: 'Alternate Page', url: 'https://www.godrejproperties.com/finding-space/mumbai/residential/kandivali/godrej-nest' }
-        ]
+        name: 'Godrej Nest',
+        city: 'Mumbai',
+        location: 'Kandivali',
+        links: {
+            overviewPage: 'https://www.godrejproperties.com/mumbai/kandivali/godrej-nest',
+            landingPage: 'https://www.godrejproperties.com/finding-space/mumbai/residential/kandivali/godrej-nest',
+        }
     },
     {
-        name: 'Godrej City, Panvel',
-        links: [
-            { name: 'Official Website', url: 'https://www.godrejproperties.com/mumbai/panvel/godrej-city' },
-            { name: 'Alternate Page', url: 'https://www.godrejproperties.com/finding-space/mumbai/residential/godrej-city-panvel/godrej-city' }
-        ]
+        name: 'Godrej City',
+        city: 'Mumbai',
+        location: 'Panvel',
+        links: {
+            overviewPage: 'https://www.godrejproperties.com/mumbai/panvel/godrej-city',
+            landingPage: 'https://www.godrejproperties.com/finding-space/mumbai/residential/godrej-city-panvel/godrej-city',
+            digitalCollaterals: 'https://www.godrejproperties.com/digital-collaterals/godrej-city-panvel',
+            alternateCollaterals: 'https://www.godrejproperties.com/collaterals/mumbai/godrej-city-panvel-collaterals',
+        }
     },
     {
-        name: 'Godrej Highlands, Panvel',
-        links: [
-            { name: 'Official Website', url: 'https://www.godrejproperties.com/mumbai/panvel/godrej-highlands' },
-            { name: 'Alternate Page', url: 'https://www.godrejproperties.com/finding-space/mumbai/residential/panvel/godrej-highlands' }
-        ]
+        name: 'Godrej Highlands',
+        city: 'Mumbai',
+        location: 'Panvel',
+        links: {
+            overviewPage: 'https://www.godrejproperties.com/mumbai/panvel/godrej-highlands',
+            landingPage: 'https://www.godrejproperties.com/finding-space/mumbai/residential/panvel/godrej-highlands',
+        }
     },
     {
-        name: 'Godrej Woods, Panvel',
-        links: [
-            { name: 'Official Website', url: 'https://www.godrejproperties.com/mumbai/panvel/godrej-woods' },
-            { name: 'Alternate Page', url: 'https://www.godrejproperties.com/finding-space/mumbai/residential/panvel/godrej-woods-panvel' }
-        ]
+        name: 'Godrej Woods',
+        city: 'Mumbai',
+        location: 'Panvel',
+        links: {
+            overviewPage: 'https://www.godrejproperties.com/mumbai/panvel/godrej-woods',
+            landingPage: 'https://www.godrejproperties.com/finding-space/mumbai/residential/panvel/godrej-woods-panvel',
+        }
     },
     {
-        name: 'The Trees, Vikhroli',
-        links: [
-            { name: 'Official Website', url: 'https://www.godrejproperties.com/mumbai/vikhroli/the-trees' },
-            { name: 'Alternate Page', url: 'https://www.godrejproperties.com/finding-space/mumbai/residential/vikhroli/the-trees' }
-        ]
+        name: 'Godrej Emerald',
+        city: 'Mumbai',
+        location: 'Thane',
+        links: {
+            overviewPage: 'https://www.godrejproperties.com/mumbai/thane/godrej-emerald',
+            landingPage: 'https://www.godrejproperties.com/finding-space/mumbai/residential/thane/godrej-emerald',
+            digitalCollaterals: 'https://www.godrejproperties.com/digital-collaterals/godrej-emerald',
+            alternateCollaterals: 'https://www.godrejproperties.com/collaterals/mumbai/godrej-emerald-collaterals'
+        }
     },
     {
-        name: 'Godrej Prime, Chembur',
-        links: [
-            { name: 'Official Website', url: 'https://www.godrejproperties.com/mumbai/chembur/godrej-prime' },
-            { name: 'Alternate Page', url: 'https://www.godrejproperties.com/finding-space/mumbai/residential/chembur/godrej-prime' }
-        ]
+        name: 'The Trees',
+        city: 'Mumbai',
+        location: 'Vikhroli',
+        links: {
+            overviewPage: 'https://www.godrejproperties.com/mumbai/vikhroli/the-trees',
+            landingPage: 'https://www.godrejproperties.com/finding-space/mumbai/residential/vikhroli/the-trees',
+            digitalCollaterals: 'https://www.godrejproperties.com/digital-collaterals/the-trees',
+            alternateCollaterals: 'https://www.godrejproperties.com/collaterals/mumbai/the-trees-collaterals'
+        }
     },
     {
-        name: 'Godrej Central, Chembur',
-        links: [
-            { name: 'Official Website', url: 'https://www.godrejproperties.com/mumbai/chembur/godrej-central' },
-            { name: 'Alternate Page', url: 'https://www.godrejproperties.com/finding-space/mumbai/residential/chembur/godrej-central' }
-        ]
+        name: 'Godrej Prime',
+        city: 'Mumbai',
+        location: 'Chembur',
+        links: {
+            overviewPage: 'https://www.godrejproperties.com/mumbai/chembur/godrej-prime',
+            landingPage: 'https://www.godrejproperties.com/finding-space/mumbai/residential/chembur/godrej-prime',
+            digitalCollaterals: 'https://www.godrejproperties.com/digital-collaterals/godrej-prime'
+        }
     },
     {
-        name: 'Planet Godrej, Mahalaxmi',
-        links: [
-            { name: 'Official Website', url: 'https://www.godrejproperties.com/mumbai/mahalaxmi/planet-godrej' },
-            { name: 'Alternate Page', url: 'https://www.godrejproperties.com/finding-space/mumbai/residential/mahalaxmi/planet-godrej' }
-        ]
+        name: 'Godrej Central',
+        city: 'Mumbai',
+        location: 'Chembur',
+        links: {
+            overviewPage: 'https://www.godrejproperties.com/mumbai/chembur/godrej-central',
+            landingPage: 'https://www.godrejproperties.com/finding-space/mumbai/residential/chembur/godrej-central',
+            digitalCollaterals: 'https://www.godrejproperties.com/digital-collaterals/godrej-central'
+        }
     },
     {
-        name: 'Godrej Platinum, Vikhroli',
-        links: [
-            { name: 'Official Website', url: 'https://www.godrejproperties.com/mumbai/vikhroli/godrej-platinum' },
-            { name: 'Alternate Page', url: 'https://www.godrejproperties.com/finding-space/mumbai/residential/vikhroli/godrej-platinum-vikhroli' }
-        ]
+        name: 'Planet Godrej',
+        city: 'Mumbai',
+        location: 'Mahalaxmi',
+        links: {
+            overviewPage: 'https://www.godrejproperties.com/mumbai/mahalaxmi/planet-godrej',
+            landingPage: 'https://www.godrejproperties.com/finding-space/mumbai/residential/mahalaxmi/planet-godrej',
+            digitalCollaterals: 'https://www.godrejproperties.com/digital-collaterals/planet-godrej'
+        }
     },
     {
-        name: 'Godrej Serenity, Chembur',
-        links: [
-            { name: 'Official Website', url: 'https://www.godrejproperties.com/mumbai/chembur/godrej-serenity' }
-        ]
+        name: 'Godrej Platinum',
+        city: 'Mumbai',
+        location: 'Vikhroli',
+        links: {
+            overviewPage: 'https://www.godrejproperties.com/mumbai/vikhroli/godrej-platinum',
+            landingPage: 'https://www.godrejproperties.com/finding-space/mumbai/residential/vikhroli/godrej-platinum-vikhroli',
+            digitalCollaterals: 'https://www.godrejproperties.com/digital-collaterals/godrej-platinum'
+        }
     },
     {
-        name: 'Godrej Reserve, Kandivali',
-        links: [
-            { name: 'Official Website', url: 'https://www.godrejproperties.com/mumbai/kandivali/godrej-reserve' },
-            { name: 'Alternate Page', url: 'https://www.godrejproperties.com/finding-space/mumbai/residential/kandivali/godrej-reserve' }
-        ]
+        name: 'Godrej Serenity',
+        city: 'Mumbai',
+        location: 'Chembur',
+        links: {
+            overviewPage: 'https://www.godrejproperties.com/mumbai/chembur/godrej-serenity',
+            digitalCollaterals: 'https://www.godrejproperties.com/digital-collaterals/godrej-serenity'
+        }
     },
     {
-        name: 'Godrej Vihaa, Badlapur',
-        links: [
-            { name: 'Official Website', url: 'https://www.godrejproperties.com/mumbai/badlapur/godrej-vihaa' },
-            { name: 'Alternate Page', url: 'https://www.godrejproperties.com/finding-space/mumbai/residential/badlapur/godrej-vihaa' }
-        ]
+        name: 'Godrej Reserve',
+        city: 'Mumbai',
+        location: 'Kandivali',
+        links: {
+            overviewPage: 'https://www.godrejproperties.com/mumbai/kandivali/godrej-reserve',
+            landingPage: 'https://www.godrejproperties.com/finding-space/mumbai/residential/kandivali/godrej-reserve',
+            digitalCollaterals: 'https://www.godrejproperties.com/digital-collaterals/godrej-reserve',
+            eoiPortal: 'https://www.godrejproperties.com/eoi/mumbai/kandivali/godrej-reserve-eoi',
+            eoiWindow: 'https://eoi.godrejproperties.com/',
+        }
     },
     {
-        name: 'Godrej Riviera, Kalyan',
-        links: [
-            { name: 'Official Website', url: 'https://www.godrejproperties.com/mumbai/kalyan/godrej-riviera' }
-        ]
+        name: 'Godrej Vihaa',
+        city: 'Mumbai',
+        location: 'Badlapur',
+        links: {
+            overviewPage: 'https://www.godrejproperties.com/mumbai/badlapur/godrej-vihaa',
+            landingPage: 'https://www.godrejproperties.com/finding-space/mumbai/residential/badlapur/godrej-vihaa',
+            digitalCollaterals: 'https://www.godrejproperties.com/digital-collaterals/godrej-vihaa'
+        }
     },
     {
-        name: 'Godrej Rejuve, Pune',
-        links: [
-            { name: 'Official Website', url: 'https://www.godrejproperties.com/pune/keshav-nagar/godrej-rejuve' }
-        ]
+        name: 'Godrej Riviera',
+        city: 'Mumbai',
+        location: 'Kalyan',
+        links: {
+            overviewPage: 'https://www.godrejproperties.com/mumbai/kalyan/godrej-riviera',
+            digitalCollaterals: 'https://www.godrejproperties.com/digital-collaterals/godrej-riviera-kalyan'
+        }
     },
     {
-        name: 'Godrej Nurture, Pune',
-        links: [
-            { name: 'Official Website', url: 'https://www.godrejproperties.com/pune/mamurdi/godrej-nurture' }
-        ]
+        name: 'Godrej Air',
+        city: 'Pune',
+        location: 'NIBM',
+        links: {
+            overviewPage: 'https://www.godrejproperties.com/pune/nibm/godrej-air',
+            landingPage: 'https://www.godrejproperties.com/finding-space/pune/residential/nibm/godrej-air',
+            digitalCollaterals: 'https://www.godrejproperties.com/digital-collaterals/godrej-air'
+        }
     },
     {
-        name: 'Godrej Retreat, Pune',
-        links: [
-            { name: 'Official Website', url: 'https://www.godrejproperties.com/pune/hadapsar/godrej-retreat' }
-        ]
+        name: 'Godrej Boulevard',
+        city: 'Pune',
+        location: 'Manjari',
+        links: {
+            overviewPage: 'https://www.godrejproperties.com/pune/manjari/godrej-boulevard',
+            landingPage: 'https://www.godrejproperties.com/finding-space/pune/residential/manjari-khurd/godrej-boulevard',
+        }
     },
     {
-        name: 'Godrej Parkridge, Pune',
-        links: [
-            { name: 'Official Website', url: 'https://www.godrejproperties.com/pune/manjari/godrej-parkridge' }
-        ]
+        name: 'Godrej Rejuve',
+        city: 'Pune',
+        location: 'Keshav Nagar',
+        links: {
+            overviewPage: 'https://www.godrejproperties.com/pune/keshav-nagar/godrej-rejuve',
+            landingPage: 'https://www.godrejproperties.com/finding-space/pune/residential/keshav-nagar-1/godrej-rejuve',
+            digitalCollaterals: 'https://www.godrejproperties.com/digital-collaterals/godrej-rejuve-pune'
+        }
     },
     {
-        name: 'Godrej Meadows 2, Pune',
-        links: [
-            { name: 'Official Website', url: 'https://www.godrejproperties.com/pune/mahalunge/godrej-meadows' }
-        ]
+        name: 'Godrej Nurture',
+        city: 'Pune',
+        location: 'Mamurdi',
+        links: {
+            overviewPage: 'https://www.godrejproperties.com/pune/mamurdi/godrej-nurture',
+            landingPage: 'https://www.godrejproperties.com/finding-space/pune/residential/mamurdi/godrej-nurture',
+        }
     },
     {
-        name: 'Godrej Jardinia, Noida',
-        links: [
-            { name: 'Official Website', url: 'https://www.godrejproperties.com/ncr/noida/sector-146/godrej-jardinia' }
-        ]
+        name: 'Godrej Hill Retreat',
+        city: 'Pune',
+        location: 'Baner',
+        links: {
+            overviewPage: 'https://www.godrejproperties.com/pune/baner/godrej-hill-retreat',
+            landingPage: 'https://www.godrejproperties.com/finding-space/pune/residential/baner/godrej-hill-retreat',
+        }
     },
     {
-        name: 'Godrej Connaught One, Delhi',
-        links: [
-            { name: 'Official Website', url: 'https://www.godrejproperties.com/ncr/delhi/connaught-place/godrej-connaught-one' }
-        ]
+        name: 'Godrej Woodsville',
+        city: 'Pune',
+        location: 'Hinjewadi',
+        links: {
+            overviewPage: 'https://www.godrejproperties.com/pune/hinjawadi/godrej-woodsville',
+            landingPage: 'https://www.godrejproperties.com/finding-space/pune/residential/hinjawadi/godrej-woodsville',
+        }
     },
     {
-        name: 'Godrej Zenith, Gurgaon',
-        links: [
-            { name: 'Official Website', url: 'https://www.godrejproperties.com/ncr/gurgaon/sector-89/godrej-zenith' }
-        ]
+        name: 'Godrej Jardinia',
+        city: 'NCR',
+        location: 'Sector 146, Noida',
+        links: {
+            overviewPage: 'https://www.godrejproperties.com/ncr/noida/sector-146/godrej-jardinia',
+            internationalPage: 'https://www.godrejproperties.com/ncr/noida/sector-146/godrej-jardinia-international',
+            ppLandingPage: 'https://buy.godrejproperties.com/pp-noida-s-146',
+            ppLandingPageNew: 'https://buy.godrejproperties.com/noida-s-146-new',
+            rcpLandingPage: 'https://buy.godrejproperties.com/rcp-noida',
+            eoiWindow: 'https://eoi.godrejproperties.com/Noida_S146',
+        }
+    },
+    {
+        name: 'Godrej Connaught One',
+        city: 'NCR',
+        location: 'Delhi',
+        links: {
+            overviewPage: 'https://www.godrejproperties.com/ncr/delhi/connaught-place/godrej-connaught-one'
+        }
+    },
+    {
+        name: 'Godrej Zenith',
+        city: 'NCR',
+        location: 'Sector 89, Gurgaon',
+        links: {
+            overviewPage: 'https://www.godrejproperties.com/ncr/gurgaon/sector-89/godrej-zenith',
+            internationalPage: 'https://www.godrejproperties.com/ncr/gurgaon/sector-89/godrej-zenith-international',
+            ppLandingPage: 'https://buy.godrejproperties.com/pp-gurgaon-s-89',
+            ppLandingPageNew: 'https://buy.godrejproperties.com/gurgaon-s-89-new',
+            rcpLandingPage: 'https://buy.godrejproperties.com/rcp-gurgaon-s-89',
+            eoiWindow: 'https://eoi.godrejproperties.com/Gurgaon_S89'
+        }
+    },
+    {
+        name: 'Godrej Tropical Isle',
+        city: 'NCR',
+        location: 'Sector 146, Noida',
+        links: {
+            overviewPage: 'https://www.godrejproperties.com/ncr/noida/sector-146/godrej-tropical-isle',
+            landingPage: 'https://www.godrejproperties.com/finding-space/ncr/residential/noida/godrej-tropical-isle',
+            digitalCollaterals: 'https://www.godrejproperties.com/digital-collaterals/godrej-tropical-isle',
+            eoiPortal: 'https://www.godrejproperties.com/eoi/ncr/noida/godrej-tropical-isle-eoi',
+            eoiWindow: 'https://eoi.godrejproperties.com/'
+        }
+    },
+    {
+        name: 'Godrej Aristocrat',
+        city: 'NCR',
+        location: 'Sector 49, Gurgaon',
+        links: {
+            overviewPage: 'https://www.godrejproperties.com/ncr/gurgaon/sector-49/godrej-aristocrat'
+        }
+    },
+    {
+        name: 'Godrej Vriksha',
+        city: 'NCR',
+        location: 'Sector 103, Gurgaon',
+        links: {
+            overviewPage: 'https://www.godrejproperties.com/ncr/gurgaon/sector-103/godrej-vriksha'
+        }
     }
 ];

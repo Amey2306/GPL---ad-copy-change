@@ -1,6 +1,5 @@
-
-import React, { useState } from 'react';
-import { Project, VerificationResult as VerificationResultType, AdCopy } from '../types';
+import React, { useState, useMemo } from 'react';
+import { Project, VerificationResult as VerificationResultType, AdCopy, ProjectLink } from '../types';
 import * as geminiService from '../services/geminiService';
 import ImagePreview from '../components/ImagePreview';
 import AnalysisResult from '../components/AnalysisResult';
@@ -24,6 +23,25 @@ const LoadingSpinner = () => (
     </svg>
 );
 
+const CATEGORY_MAP: { [key: string]: string } = {
+  overviewPage: 'Overview Page Link',
+  landingPage: 'Landing Page Link',
+  teaserLandingPage: 'Teaser Landing Page',
+  digitalCollaterals: 'Digital Collaterals Link',
+  alternateCollaterals: 'Alternate Collaterals Link',
+  eoiPortal: 'EOI Portal Page',
+  internationalPage: 'International Page',
+  ppLandingPage: 'PP Landing Page',
+  ppLandingPageNew: 'PP Landing Page New',
+  rcpLandingPage: 'RCP Landing Page',
+  eoiWindow: 'EOI Window',
+};
+
+const formatLinkCategory = (key: string): string => {
+    return CATEGORY_MAP[key] || key.replace(/([A-Z])/g, ' $1').replace(/^./, (str) => str.toUpperCase());
+};
+
+
 const VerifyView: React.FC<VerifyViewProps> = ({ 
     project, 
     creativeFile, 
@@ -36,6 +54,16 @@ const VerifyView: React.FC<VerifyViewProps> = ({
     const [verificationResults, setVerificationResults] = useState<VerificationResultType[]>([]);
     const [isVerifying, setIsVerifying] = useState(false);
     const [error, setError] = useState<string | null>(null);
+
+    const availableLinks = useMemo((): ProjectLink[] => {
+        if (!project?.links) return [];
+        return Object.entries(project.links)
+            .filter(([, url]) => !!url)
+            .map(([category, url]) => ({
+                name: formatLinkCategory(category),
+                url: url as string,
+            }));
+    }, [project]);
 
     if (!project || !creativeFile) return null;
 
@@ -56,7 +84,7 @@ const VerifyView: React.FC<VerifyViewProps> = ({
         const results: VerificationResultType[] = [];
         
         for (const url of selectedLinks) {
-            const linkName = project.links.find(l => l.url === url)?.name || url;
+            const linkName = availableLinks.find(l => l.url === url)?.name || url;
             try {
                 const result = await geminiService.verifyUrl(url, analysis);
                 results.push({ ...result, url, name: linkName });
@@ -90,7 +118,7 @@ const VerifyView: React.FC<VerifyViewProps> = ({
                     <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
                         <h3 className="text-lg font-semibold text-slate-800 mb-3">1. Select URLs to Verify</h3>
                         <div className="space-y-3">
-                            {project.links.map(link => (
+                            {availableLinks.map(link => (
                                 <label key={link.url} className="flex items-center p-3 bg-slate-50 rounded-lg border border-slate-200 cursor-pointer hover:bg-slate-100 transition">
                                     <input
                                         type="checkbox"

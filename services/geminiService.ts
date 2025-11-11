@@ -1,3 +1,4 @@
+
 import { GoogleGenAI, Type } from '@google/genai';
 import { AdCopy, UploadSource } from '../types';
 
@@ -27,18 +28,23 @@ const fileToGenerativePart = async (file: File) => {
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 export const analyzeCreativeAndCopy = async (imageFile: File, adCopyText: string): Promise<string> => {
-    const imagePart = await fileToGenerativePart(imageFile);
-    const textPart = { text: `Analyze the provided ad creative image and the existing ad copy for Godrej Properties. Provide a concise analysis focusing on key messages, copy-image synergy, and specific areas for improvement.
+    try {
+        const imagePart = await fileToGenerativePart(imageFile);
+        const textPart = { text: `Analyze the provided ad creative image and the existing ad copy for Godrej Properties. Provide a concise analysis focusing on key messages, copy-image synergy, and specific areas for improvement.
 
 Existing ad copy:
 ${adCopyText}` };
 
-    const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
-        contents: [{ parts: [imagePart, textPart] }],
-    });
+        const response = await ai.models.generateContent({
+            model: 'gemini-2.5-flash',
+            contents: [{ parts: [imagePart, textPart] }],
+        });
 
-    return response.text;
+        return response.text;
+    } catch (error) {
+        console.error("Gemini API Error (analyzeCreativeAndCopy):", error);
+        throw new Error('Failed to get analysis from Gemini. The API may be unavailable or the request failed.');
+    }
 };
 
 
@@ -69,48 +75,57 @@ Return ONLY a JSON object with two keys: "google" and "meta", each containing an
         required: ['field', 'text']
     };
 
-    const response = await ai.models.generateContent({
-        model: "gemini-2.5-flash",
-        contents: [{parts: [{text: prompt}]}],
-        config: {
-            responseMimeType: "application/json",
-            responseSchema: {
-                type: Type.OBJECT,
-                properties: {
-                    google: {
-                        type: Type.ARRAY,
-                        items: adCopySchema
+    try {
+        const response = await ai.models.generateContent({
+            model: "gemini-2.5-flash",
+            contents: [{parts: [{text: prompt}]}],
+            config: {
+                responseMimeType: "application/json",
+                responseSchema: {
+                    type: Type.OBJECT,
+                    properties: {
+                        google: {
+                            type: Type.ARRAY,
+                            items: adCopySchema
+                        },
+                        meta: {
+                            type: Type.ARRAY,
+                            items: adCopySchema
+                        }
                     },
-                    meta: {
-                        type: Type.ARRAY,
-                        items: adCopySchema
-                    }
-                },
-                required: ['google', 'meta']
+                    required: ['google', 'meta']
+                }
             }
-        }
-    });
+        });
 
-    const jsonText = response.text.trim();
-    return JSON.parse(jsonText);
+        const jsonText = response.text.trim();
+        return JSON.parse(jsonText);
+    } catch (error) {
+        console.error("Gemini API Error (generateAdCopy):", error);
+        if (error instanceof SyntaxError) {
+             throw new Error('Gemini returned an invalid format for the ad copy. Please try again.');
+        }
+        throw new Error('Failed to generate ad copy suggestions. The API may be unavailable.');
+    }
 };
 
 
 export const generateAdCopiesFromSource = async (imageFile: File, source: UploadSource): Promise<{ analysis: string, google: AdCopy[], meta: AdCopy[]}> => {
-    const imagePart = await fileToGenerativePart(imageFile);
-    let sourceInfo: string;
-    let sourcePart: { inlineData: { data: string; mimeType: string; } } | null = null;
+    try {
+        const imagePart = await fileToGenerativePart(imageFile);
+        let sourceInfo: string;
+        let sourcePart: { inlineData: { data: string; mimeType: string; } } | null = null;
 
-    if (source.type === 'file' && source.content instanceof File) {
-        sourceInfo = `the provided document named "${source.content.name}"`;
-        sourcePart = await fileToGenerativePart(source.content);
-    } else if (source.type === 'url') {
-        sourceInfo = `the content from the YouTube URL: ${source.content}`;
-    } else {
-        sourceInfo = `the following text context`;
-    }
+        if (source.type === 'file' && source.content instanceof File) {
+            sourceInfo = `the provided document named "${source.content.name}"`;
+            sourcePart = await fileToGenerativePart(source.content);
+        } else if (source.type === 'url') {
+            sourceInfo = `the content from the YouTube URL: ${source.content}`;
+        } else {
+            sourceInfo = `the following text context`;
+        }
 
-    const textPrompt = `You are an expert ad copywriter for Godrej Properties, a luxury real estate developer in India. Your task is to generate brand new ad copy for Google Ads and Meta Ads based on the provided creative image and source material.
+        const textPrompt = `You are an expert ad copywriter for Godrej Properties, a luxury real estate developer in India. Your task is to generate brand new ad copy for Google Ads and Meta Ads based on the provided creative image and source material.
 
 **Source Material:** Analyze ${sourceInfo}.
 ${source.type === 'text' ? `\n**Source Text:**\n${source.content}` : ''}
@@ -127,46 +142,53 @@ ${source.type === 'text' ? `\n**Source Text:**\n${source.content}` : ''}
 
 Return ONLY the JSON object.`;
 
-    const parts = [imagePart, { text: textPrompt }];
-    if (sourcePart) {
-        parts.push(sourcePart);
-    }
-
-    const adCopySchema = {
-        type: Type.OBJECT,
-        properties: {
-            field: { type: Type.STRING },
-            text: { type: Type.STRING },
-        },
-        required: ['field', 'text']
-    };
-
-    const response = await ai.models.generateContent({
-        model: "gemini-2.5-pro",
-        contents: [{ parts }],
-        config: {
-            responseMimeType: "application/json",
-            responseSchema: {
-                type: Type.OBJECT,
-                properties: {
-                    analysis: { type: Type.STRING, description: 'A concise analysis of the source material.' },
-                    google: {
-                        type: Type.ARRAY,
-                        items: adCopySchema
-                    },
-                    meta: {
-                        type: Type.ARRAY,
-                        items: adCopySchema
-                    }
-                },
-                required: ['analysis', 'google', 'meta']
-            },
-            thinkingConfig: { thinkingBudget: 32768 }
+        const parts = [imagePart, { text: textPrompt }];
+        if (sourcePart) {
+            parts.push(sourcePart);
         }
-    });
-    
-    const jsonText = response.text.trim();
-    return JSON.parse(jsonText);
+
+        const adCopySchema = {
+            type: Type.OBJECT,
+            properties: {
+                field: { type: Type.STRING },
+                text: { type: Type.STRING },
+            },
+            required: ['field', 'text']
+        };
+
+        const response = await ai.models.generateContent({
+            model: "gemini-2.5-pro",
+            contents: [{ parts }],
+            config: {
+                responseMimeType: "application/json",
+                responseSchema: {
+                    type: Type.OBJECT,
+                    properties: {
+                        analysis: { type: Type.STRING, description: 'A concise analysis of the source material.' },
+                        google: {
+                            type: Type.ARRAY,
+                            items: adCopySchema
+                        },
+                        meta: {
+                            type: Type.ARRAY,
+                            items: adCopySchema
+                        }
+                    },
+                    required: ['analysis', 'google', 'meta']
+                },
+                thinkingConfig: { thinkingBudget: 32768 }
+            }
+        });
+        
+        const jsonText = response.text.trim();
+        return JSON.parse(jsonText);
+    } catch (error) {
+        console.error("Gemini API Error (generateAdCopiesFromSource):", error);
+        if (error instanceof SyntaxError) {
+             throw new Error('Gemini returned an invalid format while generating new ad copy. Please try again.');
+        }
+        throw new Error('Failed to generate new ad copy. The API may be unavailable or the source material could not be processed.');
+    }
 };
 
 
@@ -186,15 +208,23 @@ ${analysis}
 
 Return ONLY the JSON object.`;
 
-    const response = await ai.models.generateContent({
-        model: "gemini-2.5-flash",
-        contents: [{parts: [{text: prompt}]}],
-        config: {
-            tools: [{ googleSearch: {} }],
-        },
-    });
+    try {
+        const response = await ai.models.generateContent({
+            model: "gemini-2.5-flash",
+            contents: [{parts: [{text: prompt}]}],
+            config: {
+                tools: [{ googleSearch: {} }],
+            },
+        });
 
-    const jsonText = response.text.trim();
-    const cleanedJsonText = jsonText.replace(/^```json\s*/, '').replace(/\s*```$/, '');
-    return JSON.parse(cleanedJsonText);
+        const jsonText = response.text.trim();
+        const cleanedJsonText = jsonText.replace(/^```json\s*/, '').replace(/\s*```$/, '');
+        return JSON.parse(cleanedJsonText);
+    } catch (error) {
+        console.error(`Gemini API Error (verifyUrl for ${url}):`, error);
+        if (error instanceof SyntaxError) {
+             throw new Error(`Verification failed: Gemini returned an unexpected response for this URL.`);
+        }
+        throw new Error(`Verification failed: Could not access or process this URL.`);
+    }
 };

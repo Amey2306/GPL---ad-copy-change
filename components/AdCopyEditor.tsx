@@ -9,14 +9,18 @@ interface AdCopyEditorProps {
     isGenerated: boolean;
 }
 
-const AdCopyCard: React.FC<{ title: string, copy: AdCopy[], isUpdated?: boolean }> = ({ title, copy, isUpdated = false }) => (
-    <div className="bg-white p-4 rounded-lg border border-slate-200">
+const AdCopyCard: React.FC<{ title: string, copy: AdCopy[], isUpdated?: boolean, delay?: number }> = ({ title, copy, isUpdated = false, delay = 0 }) => (
+    <div 
+        className={`bg-white p-4 rounded-lg border border-slate-200 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden animate-fade-in-slide-up`}
+        style={{ animationDelay: `${delay}ms` }}
+    >
+        {isUpdated && <div className="absolute top-0 left-0 h-1 w-full bg-gradient-to-r from-indigo-500 to-blue-500"></div>}
         <h4 className="text-md font-semibold text-slate-700 mb-3">{title}</h4>
         <div className="space-y-3">
             {copy.map((ad, index) => (
                 <div key={index} className="text-sm p-3 rounded-md bg-slate-50 border border-slate-200">
                     <p className="font-semibold text-xs text-slate-500 uppercase tracking-wider">{ad.field}</p>
-                    <p className={`mt-1 ${isUpdated ? 'text-blue-700' : 'text-slate-800'}`}>{ad.text}</p>
+                    <p className={`mt-1 ${isUpdated ? 'text-indigo-800 font-medium' : 'text-slate-800'}`}>{ad.text}</p>
                 </div>
             ))}
         </div>
@@ -33,14 +37,14 @@ const AdCopyEditor: React.FC<AdCopyEditorProps> = ({
     const [activeTab, setActiveTab] = useState<'google' | 'meta'>('google');
 
     const renderComparison = (original: AdCopy[], updated: AdCopy[], platform: string) => (
-        <div className="grid grid-cols-2 gap-6">
-            <AdCopyCard title={`Original ${platform} Copy`} copy={original} />
-            <AdCopyCard title={`Gemini's Suggestions`} copy={updated} isUpdated />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <AdCopyCard title={`Original ${platform} Copy`} copy={original} delay={100} />
+            <AdCopyCard title={`Gemini's Suggestions`} copy={updated} isUpdated delay={200} />
         </div>
     );
     
     const renderGenerated = (copy: AdCopy[], platform: string) => (
-         <AdCopyCard title={`Generated ${platform} Copy`} copy={copy} isUpdated />
+         <AdCopyCard title={`Generated ${platform} Copy`} copy={copy} isUpdated delay={100} />
     );
 
     const googleContent = isGenerated
@@ -54,30 +58,30 @@ const AdCopyEditor: React.FC<AdCopyEditorProps> = ({
     return (
         <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200 h-full flex flex-col">
             <div className="flex-shrink-0 border-b border-slate-200 mb-4">
-                <nav className="-mb-px flex space-x-6">
+                <nav className="-mb-px flex space-x-2">
                     <button
                         onClick={() => setActiveTab('google')}
-                        className={`whitespace-nowrap pb-3 px-1 border-b-2 font-medium text-sm ${
+                        className={`whitespace-nowrap py-3 px-4 rounded-t-md font-medium text-sm transition-colors ${
                             activeTab === 'google'
-                                ? 'border-blue-500 text-blue-600'
-                                : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
+                                ? 'border-b-2 border-indigo-500 text-indigo-600 bg-indigo-50'
+                                : 'border-b-2 border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-100'
                         }`}
                     >
                         Google Ads
                     </button>
                     <button
                         onClick={() => setActiveTab('meta')}
-                        className={`whitespace-nowrap pb-3 px-1 border-b-2 font-medium text-sm ${
+                        className={`whitespace-nowrap py-3 px-4 rounded-t-md font-medium text-sm transition-colors ${
                             activeTab === 'meta'
-                                ? 'border-blue-500 text-blue-600'
-                                : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
+                                ? 'border-b-2 border-indigo-500 text-indigo-600 bg-indigo-50'
+                                : 'border-b-2 border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-100'
                         }`}
                     >
                         Meta Ads
                     </button>
                 </nav>
             </div>
-            <div className="flex-1 overflow-y-auto custom-scrollbar pr-2">
+            <div className="flex-1 overflow-y-auto custom-scrollbar -mr-2 pr-2">
                 {activeTab === 'google' ? googleContent : metaContent}
             </div>
         </div>

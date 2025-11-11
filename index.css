@@ -1,12 +1,26 @@
 
 :root {
   --font-sans: 'Inter', sans-serif;
-  --color-primary: #4A69FF;
-  --color-primary-hover: #3b54cc;
-  --color-background: #F8F9FA;
-  --color-text-primary: #1E293B;
-  --color-text-secondary: #64748B;
-  --color-border: #E2E8F0;
+  
+  /* New Color Palette */
+  --color-primary-600: #4F46E5; /* Indigo 600 */
+  --color-primary-700: #4338CA; /* Indigo 700 */
+  --color-primary-glow: rgba(79, 70, 229, 0.4);
+
+  --color-background: #F8FAFC; /* Slate 50 */
+  --color-surface: #FFFFFF;
+  
+  --color-text-primary: #1E293B;   /* Slate 800 */
+  --color-text-secondary: #64748B; /* Slate 500 */
+  --color-text-tertiary: #94A3B8;   /* Slate 400 */
+
+  --color-border: #E2E8F0; /* Slate 200 */
+  --color-border-hover: #CBD5E1; /* Slate 300 */
+  
+  /* Feedback Colors */
+  --color-success: #10B981; /* Emerald 500 */
+  --color-warning: #F59E0B; /* Amber 500 */
+  --color-danger: #EF4444; /* Red 500 */
 }
 
 body {
@@ -14,6 +28,16 @@ body {
   background-color: var(--color-background);
   color: var(--color-text-primary);
 }
+
+/* Global Transitions for smooth animations */
+* {
+    transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, box-shadow, transform, filter, -webkit-backdrop-filter;
+    transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, box-shadow, transform, filter, backdrop-filter;
+    transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, box-shadow, transform, filter, backdrop-filter, -webkit-backdrop-filter;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 200ms;
+}
+
 
 .custom-scrollbar::-webkit-scrollbar {
   width: 6px;
@@ -38,4 +62,30 @@ body {
     transition-property: all;
     transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
     transition-duration: 200ms;
+}
+
+/* Animation Keyframes */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes fadeInSlideUp {
+  from { 
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to { 
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.5s ease-out forwards;
+}
+
+.animate-fade-in-slide-up {
+  animation: fadeInSlideUp 0.5s ease-out forwards;
+  opacity: 0; /* Start hidden */
 }

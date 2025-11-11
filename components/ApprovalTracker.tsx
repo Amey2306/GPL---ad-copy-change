@@ -1,62 +1,100 @@
-
 import React from 'react';
+import { ApprovalEvent, AppState } from '../types';
 
-const stakeholders = [
-    { name: 'Marketing Lead', status: 'approved', time: '1h ago' },
-    { name: 'Legal Team', status: 'pending', time: '' },
-    { name: 'Brand Manager', status: 'approved', time: '3h ago' },
-];
+interface ApprovalTrackerProps {
+    history: ApprovalEvent[];
+    status: AppState;
+}
 
-const ApprovalTracker: React.FC = () => {
-    const getStatusClasses = (status: string) => {
-        switch (status) {
-            case 'approved':
-                return {
-                    icon: (
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-emerald-500" viewBox="0 0 20 20" fill="currentColor">
-                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                        </svg>
-                    ),
-                    text: 'text-emerald-600',
-                    label: 'Approved'
-                };
-            case 'pending':
-                return {
-                    icon: (
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-amber-500" viewBox="0 0 20 20" fill="currentColor">
-                             <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.414-1.415L11 9.586V6z" clipRule="evenodd" />
-                        </svg>
-                    ),
-                    text: 'text-amber-600',
-                    label: 'Pending'
-                };
-            default:
-                return { icon: null, text: 'text-slate-500', label: 'Unknown' };
+const formatTimestamp = (date: Date): string => {
+    return date.toLocaleString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true,
+    });
+}
+
+const ApprovalTracker: React.FC<ApprovalTrackerProps> = ({ history, status }) => {
+    
+    const sentEvent = history.find(e => e.status === 'Sent');
+    const approvedEvent = history.find(e => e.status === 'Approved');
+
+    const isPending = status === AppState.APPROVAL_PENDING;
+    const isApproved = status === AppState.APPROVED;
+
+    const timeline = [
+        {
+            name: 'Sent for Approval',
+            completed: !!sentEvent,
+            timestamp: sentEvent ? formatTimestamp(sentEvent.timestamp) : '',
+            isCurrent: !sentEvent
+        },
+        {
+            name: 'Pending Approval',
+            completed: !!approvedEvent,
+            timestamp: '',
+            isCurrent: isPending
+        },
+        {
+            name: 'Approval Received',
+            completed: isApproved,
+            timestamp: approvedEvent ? formatTimestamp(approvedEvent.timestamp) : '',
+            isCurrent: false
         }
+    ];
+
+    const getStatusClasses = (completed: boolean, isCurrent: boolean) => {
+        if (completed) {
+            return {
+                iconBg: 'bg-emerald-500',
+                textColor: 'text-slate-800',
+                icon: (
+                    <svg className="h-4 w-4 text-white" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                    </svg>
+                ),
+            };
+        }
+        if (isCurrent) {
+            return {
+                iconBg: 'bg-indigo-500 ring-4 ring-indigo-200',
+                textColor: 'text-indigo-600 font-semibold',
+                icon: <div className="h-2 w-2 bg-white rounded-full"></div>,
+            };
+        }
+        return {
+            iconBg: 'bg-slate-300',
+            textColor: 'text-slate-500',
+            icon: <div className="h-2 w-2 bg-white rounded-full"></div>,
+        };
     };
 
     return (
         <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
-            <h3 className="text-base font-semibold text-slate-800 mb-3">Approval Status</h3>
-            <ul className="space-y-3">
-                {stakeholders.map((stakeholder, index) => {
-                    const statusInfo = getStatusClasses(stakeholder.status);
-                    return (
-                        <li key={index} className="flex items-center justify-between">
-                            <div className="flex items-center">
-                                {statusInfo.icon}
-                                <span className="text-sm text-slate-700 ml-2">{stakeholder.name}</span>
-                            </div>
-                            <div className="flex items-center">
-                                <span className={`text-xs font-semibold uppercase tracking-wider mr-2 ${statusInfo.text}`}>
-                                    {statusInfo.label}
-                                </span>
-                                <span className="text-xs text-slate-400">{stakeholder.time}</span>
-                            </div>
-                        </li>
-                    )
-                })}
-            </ul>
+            <h3 className="text-base font-semibold text-slate-800 mb-4">Approval Timeline</h3>
+            <div className="relative">
+                {/* Timeline line */}
+                <div className="absolute left-3.5 top-0 h-full w-0.5 bg-slate-200" aria-hidden="true"></div>
+                
+                <ul className="space-y-4">
+                    {timeline.map((item, index) => {
+                        const classes = getStatusClasses(item.completed, item.isCurrent);
+                        return (
+                             <li key={index} className="flex items-center space-x-3">
+                                <div className={`relative z-10 flex items-center justify-center w-7 h-7 rounded-full ${classes.iconBg}`}>
+                                    {classes.icon}
+                                </div>
+                                <div className="flex-1">
+                                    <p className={`text-sm font-medium ${classes.textColor}`}>{item.name}</p>
+                                    {item.timestamp && <p className="text-xs text-slate-500">{item.timestamp}</p>}
+                                </div>
+                            </li>
+                        )
+                    })}
+                </ul>
+            </div>
         </div>
     );
 };

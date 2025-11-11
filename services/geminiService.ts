@@ -1,4 +1,3 @@
-
 import { GoogleGenAI, Type } from '@google/genai';
 import { AdCopy, UploadSource } from '../types';
 
@@ -48,22 +47,27 @@ ${adCopyText}` };
 };
 
 
-export const generateAdCopy = async (analysis: string, originalGoogleAds: AdCopy[], originalMetaAds: AdCopy[]): Promise<{google: AdCopy[], meta: AdCopy[]}> => {
-    const prompt = `Based on the following analysis, generate updated ad copy for Google Ads and Meta Ads for Godrej Properties.
-Maintain the exact same structure (same number of fields and same field names) as the original copy.
-Strictly adhere to character limits: Google headlines MUST be under 30 characters, descriptions under 90.
-The tone should be aspirational, focusing on luxury, lifestyle, and property benefits.
+export const updateAdCopy = async (analysis: string, originalGoogleAds: AdCopy[], originalMetaAds: AdCopy[]): Promise<{google: AdCopy[], meta: AdCopy[]}> => {
+    const prompt = `You are a hyper-precise ad copy editing assistant. Your ONLY task is to identify specific factual changes mentioned in the 'Analysis' and apply them to the 'Original Ad Copy' by performing a surgical "find and replace".
 
-**Analysis:**
+**CRITICAL INSTRUCTIONS:**
+1.  **DO NOT REWRITE SENTENCES.** Do not change tone, or rephrase for "better flow".
+2.  **ONLY REPLACE SPECIFIC DATA.** Find specific data points in the analysis (e.g., prices, numbers, offer names, dates) and replace ONLY those corresponding data points in the original copy.
+3.  **EXAMPLE:** If the analysis states 'Price reduced from 1.19 Cr to 1.10 Cr' and an original headline is 'Homes at ₹1.19 Cr', the updated headline MUST be 'Homes at ₹1.10 Cr'. If the analysis mentions a new 'limited-period pay plan' has replaced a 'rare payment plan', you will find and replace those exact phrases.
+4.  If a piece of original copy is not directly affected by a factual change in the analysis, it MUST remain 100% IDENTICAL in the output.
+5.  Maintain the exact same JSON structure (same number of fields and same field names) as the original copy.
+6.  Strictly adhere to character limits: Google headlines MUST be under 30 characters, descriptions under 90. Edit updated text slightly if it exceeds the limit, but only if absolutely necessary.
+
+**Analysis of New Creative:**
 ${analysis}
 
-**Original Google Ads:**
+**Original Google Ads (to be updated):**
 ${JSON.stringify(originalGoogleAds)}
 
-**Original Meta Ads:**
+**Original Meta Ads (to be updated):**
 ${JSON.stringify(originalMetaAds)}
 
-Return ONLY a JSON object with two keys: "google" and "meta", each containing an array of ad copy objects with "field" and "text" fields.
+Return ONLY a JSON object with two keys: "google" and "meta", containing the updated arrays of ad copy objects.
 `;
 
     const adCopySchema = {
@@ -101,7 +105,7 @@ Return ONLY a JSON object with two keys: "google" and "meta", each containing an
         const jsonText = response.text.trim();
         return JSON.parse(jsonText);
     } catch (error) {
-        console.error("Gemini API Error (generateAdCopy):", error);
+        console.error("Gemini API Error (updateAdCopy):", error);
         if (error instanceof SyntaxError) {
              throw new Error('Gemini returned an invalid format for the ad copy. Please try again.');
         }

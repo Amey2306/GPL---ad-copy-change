@@ -1,4 +1,3 @@
-
 export interface AdCopy {
     field: string;
     text: string;
@@ -41,4 +40,17 @@ export interface LogEntry {
     type: LogType;
     project: string;
     description: string;
+}
+
+export enum AppState {
+    UPLOAD = 'upload',
+    REVIEW = 'review',
+    APPROVAL_PENDING = 'approval_pending',
+    APPROVED = 'approved',
+    VERIFY = 'verify',
+}
+
+export interface ApprovalEvent {
+    status: 'Sent' | 'Approved';
+    timestamp: Date;
 }

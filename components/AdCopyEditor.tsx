@@ -9,6 +9,13 @@ interface AdCopyEditorProps {
     isGenerated: boolean;
 }
 
+const getCharLimit = (field: string): number | null => {
+    const lowerField = field.toLowerCase();
+    if (lowerField.includes('headline')) return 30;
+    if (lowerField.includes('description')) return 90;
+    return null;
+}
+
 const AdCopyCard: React.FC<{ title: string, copy: AdCopy[], isUpdated?: boolean, delay?: number }> = ({ title, copy, isUpdated = false, delay = 0 }) => (
     <div 
         className={`bg-white p-4 rounded-lg border border-slate-200 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden animate-fade-in-slide-up`}
@@ -17,12 +24,25 @@ const AdCopyCard: React.FC<{ title: string, copy: AdCopy[], isUpdated?: boolean,
         {isUpdated && <div className="absolute top-0 left-0 h-1 w-full bg-gradient-to-r from-indigo-500 to-blue-500"></div>}
         <h4 className="text-md font-semibold text-slate-700 mb-3">{title}</h4>
         <div className="space-y-3">
-            {copy.map((ad, index) => (
-                <div key={index} className="text-sm p-3 rounded-md bg-slate-50 border border-slate-200">
-                    <p className="font-semibold text-xs text-slate-500 uppercase tracking-wider">{ad.field}</p>
-                    <p className={`mt-1 ${isUpdated ? 'text-indigo-800 font-medium' : 'text-slate-800'}`}>{ad.text}</p>
-                </div>
-            ))}
+            {copy.map((ad, index) => {
+                const charLimit = getCharLimit(ad.field);
+                const isOverLimit = charLimit ? ad.text.length > charLimit : false;
+
+                return (
+                    <div key={index} className="text-sm p-3 rounded-md bg-slate-50 border border-slate-200">
+                        <div className="flex justify-between items-baseline">
+                             <p className="font-semibold text-xs text-slate-500 uppercase tracking-wider">{ad.field}</p>
+                             {charLimit && (
+                                <span className={`text-xs font-mono font-medium ${isOverLimit ? 'text-red-500' : 'text-slate-400'}`}>
+                                    {ad.text.length}/{charLimit}
+                                </span>
+                            )}
+                        </div>
+                        <p className={`mt-1 ${isUpdated ? 'text-indigo-800 font-medium' : 'text-slate-800'}`}>{ad.text}</p>
+                    </div>
+                )
+            })}
+            {copy.length === 0 && <p className="text-sm text-slate-500 italic">No ad copy provided.</p>}
         </div>
     </div>
 );
@@ -39,7 +59,7 @@ const AdCopyEditor: React.FC<AdCopyEditorProps> = ({
     const renderComparison = (original: AdCopy[], updated: AdCopy[], platform: string) => (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <AdCopyCard title={`Original ${platform} Copy`} copy={original} delay={100} />
-            <AdCopyCard title={`Gemini's Suggestions`} copy={updated} isUpdated delay={200} />
+            <AdCopyCard title={`Updated Suggestions`} copy={updated} isUpdated delay={200} />
         </div>
     );
     

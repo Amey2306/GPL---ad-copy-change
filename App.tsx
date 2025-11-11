@@ -1,22 +1,17 @@
-
 import React, { useState } from 'react';
 import Sidebar from './components/Sidebar';
 import UploadView from './views/UploadView';
 import ReviewView from './views/ReviewView';
 import VerifyView from './views/VerifyView';
 import * as geminiService from './services/geminiService';
-import { AdCopy, UploadSource, LogEntry, LogType, Project } from './types';
+import { AdCopy, UploadSource, LogEntry, LogType, Project, AppState, ApprovalEvent } from './types';
 import { PROJECTS, INITIAL_GOOGLE_ADS, INITIAL_META_ADS } from './constants';
 import ExcelJS from 'exceljs';
 import saveAs from 'file-saver';
 import LogViewer from './components/LogViewer';
 
-
-type AppState = 'upload' | 'review' | 'verify';
-
 const App = () => {
-    const [currentStep, setCurrentStep] = useState<number>(1);
-    const [appState, setAppState] = useState<AppState>('upload');
+    const [appState, setAppState] = useState<AppState>(AppState.UPLOAD);
     
     // Upload state
     const [creativeFile, setCreativeFile] = useState<File | null>(null);
@@ -33,6 +28,9 @@ const App = () => {
     const [updatedGoogleAds, setUpdatedGoogleAds] = useState<AdCopy[]>([]);
     const [updatedMetaAds, setUpdatedMetaAds] = useState<AdCopy[]>([]);
 
+    // Approval state
+    const [approvalHistory, setApprovalHistory] = useState<ApprovalEvent[]>([]);
+
     // Log state
     const [logs, setLogs] = useState<LogEntry[]>([]);
     const [isLogViewerOpen, setIsLogViewerOpen] = useState(false);
@@ -48,7 +46,6 @@ const App = () => {
         setLogs(prev => [newLog, ...prev]);
     };
 
-
     const handleAnalyze = async (googleAds: AdCopy[], metaAds: AdCopy[]) => {
         if (!creativeFile) return;
         setIsProcessing(true);
@@ -62,7 +59,7 @@ const App = () => {
             const analysisResult = await geminiService.analyzeCreativeAndCopy(creativeFile, adCopyText);
             setAnalysis(analysisResult);
 
-            const suggestions = await geminiService.generateAdCopy(analysisResult, googleAds, metaAds);
+            const suggestions = await geminiService.updateAdCopy(analysisResult, googleAds, metaAds);
             setUpdatedGoogleAds(suggestions.google);
             setUpdatedMetaAds(suggestions.meta);
 
@@ -70,8 +67,7 @@ const App = () => {
                 addLog(LogType.ANALYSIS, selectedProject.name, 'Analyzed creative and suggested copy updates.');
             }
 
-            setAppState('review');
-            setCurrentStep(2);
+            setAppState(AppState.REVIEW);
 
         } catch (e: any) {
             setError(e.message);
@@ -98,8 +94,7 @@ const App = () => {
                 addLog(LogType.GENERATE, selectedProject.name, `Generated new ad copy from ${source.type} source.`);
             }
 
-            setAppState('review');
-            setCurrentStep(2);
+            setAppState(AppState.REVIEW);
 
         } catch (e: any) {
             setError(e.message);
@@ -108,12 +103,24 @@ const App = () => {
         }
     };
 
-    const handleApprove = () => {
+    const handleSendForApproval = () => {
         if (selectedProject) {
-            addLog(LogType.APPROVAL, selectedProject.name, 'Approved suggested ad copy.');
+            addLog(LogType.APPROVAL, selectedProject.name, 'Sent ad copy for approval.');
         }
-        setAppState('verify');
-        setCurrentStep(3);
+        setApprovalHistory([{ status: 'Sent', timestamp: new Date() }]);
+        setAppState(AppState.APPROVAL_PENDING);
+    };
+
+    const handleMarkAsApproved = () => {
+         if (selectedProject) {
+            addLog(LogType.APPROVAL, selectedProject.name, 'Ad copy marked as approved.');
+        }
+        setApprovalHistory(prev => [...prev, { status: 'Approved', timestamp: new Date() }]);
+        setAppState(AppState.APPROVED);
+    };
+
+    const handleProceedToVerify = () => {
+        setAppState(AppState.VERIFY);
     };
 
     const handleExport = async () => {
@@ -143,8 +150,7 @@ const App = () => {
     };
 
     const resetState = () => {
-        setAppState('upload');
-        setCurrentStep(1);
+        setAppState(AppState.UPLOAD);
         setCreativeFile(null);
         setAdCopyFile(null);
         setError(null);
@@ -153,11 +159,12 @@ const App = () => {
         setUpdatedGoogleAds([]);
         setUpdatedMetaAds([]);
         setSelectedProject(null);
+        setApprovalHistory([]);
     };
 
     const renderCurrentView = () => {
         switch (appState) {
-            case 'upload':
+            case AppState.UPLOAD:
                 return <UploadView 
                     onAnalyze={handleAnalyze} 
                     onGenerate={handleGenerate}
@@ -173,32 +180,32 @@ const App = () => {
                     selectedProject={selectedProject}
                     setSelectedProject={setSelectedProject}
                 />;
-            case 'review':
+            case AppState.REVIEW:
+            case AppState.APPROVAL_PENDING:
+            case AppState.APPROVED:
                 return <ReviewView 
+                    appState={appState}
                     creativeFile={creativeFile}
                     analysis={analysis}
                     originalGoogleAds={originalGoogleAds}
                     originalMetaAds={originalMetaAds}
                     updatedGoogleAds={updatedGoogleAds}
                     updatedMetaAds={updatedMetaAds}
-                    onApprove={handleApprove}
-                    onBack={() => {
-                        setAppState('upload');
-                        setCurrentStep(1);
-                    }}
+                    onSendForApproval={handleSendForApproval}
+                    onMarkAsApproved={handleMarkAsApproved}
+                    onProceedToVerify={handleProceedToVerify}
+                    onBack={() => setAppState(AppState.UPLOAD)}
                     isGenerated={isGenerated}
+                    approvalHistory={approvalHistory}
                 />;
-            case 'verify':
+            case AppState.VERIFY:
                 return <VerifyView 
                     project={selectedProject}
                     creativeFile={creativeFile}
                     analysis={analysis}
                     updatedGoogleAds={updatedGoogleAds}
                     updatedMetaAds={updatedMetaAds}
-                    onBack={() => {
-                        setAppState('review');
-                        setCurrentStep(2);
-                    }}
+                    onBack={() => setAppState(AppState.APPROVED)}
                     onExport={handleExport}
                     addLog={(project, description) => addLog(LogType.VERIFICATION, project, description)}
                 />;
@@ -209,11 +216,11 @@ const App = () => {
 
     return (
         <div className="flex h-screen bg-slate-50 font-sans">
-            <Sidebar currentStep={currentStep} />
+            <Sidebar appState={appState} />
             <main className="flex-1 flex flex-col overflow-hidden">
                 {renderCurrentView()}
             </main>
-            <div className="absolute top-4 right-4 flex space-x-2">
+            <div className="absolute top-4 right-4 flex space-x-2 z-10">
                 <button
                     onClick={() => setIsLogViewerOpen(true)}
                     className="p-2.5 bg-white rounded-full shadow-md text-slate-600 hover:bg-slate-100 transition-colors"

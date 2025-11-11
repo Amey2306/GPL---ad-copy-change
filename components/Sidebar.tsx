@@ -1,13 +1,31 @@
-
 import React from 'react';
+import { AppState } from '../types';
 
 interface SidebarProps {
-    currentStep: number;
+    appState: AppState;
 }
 
 const steps = ['Upload Assets', 'Review & Refine', 'Verify & Export'];
 
-const Sidebar: React.FC<SidebarProps> = ({ currentStep }) => {
+const Sidebar: React.FC<SidebarProps> = ({ appState }) => {
+    
+    const getCurrentStep = () => {
+        switch (appState) {
+            case AppState.UPLOAD:
+                return 1;
+            case AppState.REVIEW:
+            case AppState.APPROVAL_PENDING:
+            case AppState.APPROVED:
+                return 2;
+            case AppState.VERIFY:
+                return 3;
+            default:
+                return 1;
+        }
+    }
+
+    const currentStep = getCurrentStep();
+
     return (
         <aside className="w-64 bg-white p-6 border-r border-slate-200 hidden md:flex flex-col">
             <div className="flex items-center space-x-3 mb-10">

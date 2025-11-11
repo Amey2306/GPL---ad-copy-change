@@ -16,7 +16,34 @@ const getCharLimit = (field: string): number | null => {
     return null;
 }
 
-const AdCopyCard: React.FC<{ title: string, copy: AdCopy[], isUpdated?: boolean, delay?: number }> = ({ title, copy, isUpdated = false, delay = 0 }) => (
+/**
+ * A component that compares two strings and renders the updated version
+ * with any changed words highlighted.
+ */
+const HighlightedText: React.FC<{ originalText: string; updatedText: string }> = ({ originalText, updatedText }) => {
+    const originalParts = originalText.split(/(\s+)/); // Split by spaces, keeping them
+    const updatedParts = updatedText.split(/(\s+)/);
+
+    return (
+        <p className="mt-1 text-indigo-800 font-medium leading-relaxed">
+            {updatedParts.map((part, index) => {
+                // Highlight if the part is different from the original at the same position,
+                // or if the original text is shorter (indicating an addition).
+                if (part !== originalParts[index]) {
+                    return (
+                        <span key={index} className="bg-yellow-200 rounded-sm px-0.5">
+                            {part}
+                        </span>
+                    );
+                }
+                return part;
+            })}
+        </p>
+    );
+};
+
+
+const AdCopyCard: React.FC<{ title: string, copy: AdCopy[], isUpdated?: boolean, delay?: number, originalCopy?: AdCopy[] }> = ({ title, copy, isUpdated = false, delay = 0, originalCopy }) => (
     <div 
         className={`bg-white p-4 rounded-lg border border-slate-200 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden animate-fade-in-slide-up`}
         style={{ animationDelay: `${delay}ms` }}
@@ -27,6 +54,9 @@ const AdCopyCard: React.FC<{ title: string, copy: AdCopy[], isUpdated?: boolean,
             {copy.map((ad, index) => {
                 const charLimit = getCharLimit(ad.field);
                 const isOverLimit = charLimit ? ad.text.length > charLimit : false;
+                
+                // Find the corresponding original ad to perform a diff against it
+                const originalAd = originalCopy?.find(o => o.field === ad.field);
 
                 return (
                     <div key={index} className="text-sm p-3 rounded-md bg-slate-50 border border-slate-200">
@@ -38,7 +68,11 @@ const AdCopyCard: React.FC<{ title: string, copy: AdCopy[], isUpdated?: boolean,
                                 </span>
                             )}
                         </div>
-                        <p className={`mt-1 ${isUpdated ? 'text-indigo-800 font-medium' : 'text-slate-800'}`}>{ad.text}</p>
+                        {isUpdated && originalAd && !isOverLimit ? (
+                            <HighlightedText originalText={originalAd.text} updatedText={ad.text} />
+                        ) : (
+                             <p className={`mt-1 ${isUpdated ? 'text-indigo-800 font-medium' : 'text-slate-800'}`}>{ad.text}</p>
+                        )}
                     </div>
                 )
             })}
@@ -59,7 +93,13 @@ const AdCopyEditor: React.FC<AdCopyEditorProps> = ({
     const renderComparison = (original: AdCopy[], updated: AdCopy[], platform: string) => (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <AdCopyCard title={`Original ${platform} Copy`} copy={original} delay={100} />
-            <AdCopyCard title={`Updated Suggestions`} copy={updated} isUpdated delay={200} />
+            <AdCopyCard 
+                title={`Updated Suggestions`} 
+                copy={updated} 
+                isUpdated 
+                delay={200}
+                originalCopy={original}
+            />
         </div>
     );
     

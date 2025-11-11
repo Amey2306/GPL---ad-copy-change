@@ -10,6 +10,7 @@ import ExcelJS from 'exceljs';
 import saveAs from 'file-saver';
 import LogViewer from './components/LogViewer';
 import LinkRepositoryViewer from './components/LinkRepositoryViewer';
+import ConfirmationModal from './components/ConfirmationModal';
 
 const App = () => {
     const [appState, setAppState] = useState<AppState>(AppState.UPLOAD);
@@ -36,6 +37,7 @@ const App = () => {
     const [logs, setLogs] = useState<LogEntry[]>([]);
     const [isLogViewerOpen, setIsLogViewerOpen] = useState(false);
     const [isLinkRepoOpen, setIsLinkRepoOpen] = useState(false);
+    const [isResetConfirmOpen, setIsResetConfirmOpen] = useState(false);
 
 
     const addLog = (type: LogType, project: string, description: string) => {
@@ -163,6 +165,7 @@ const App = () => {
         setUpdatedMetaAds([]);
         setSelectedProject(null);
         setApprovalHistory([]);
+        setIsResetConfirmOpen(false);
     };
 
     const renderCurrentView = () => {
@@ -243,7 +246,7 @@ const App = () => {
                     </svg>
                 </button>
                  <button
-                    onClick={resetState}
+                    onClick={() => setIsResetConfirmOpen(true)}
                     className="p-2.5 bg-white rounded-full shadow-md text-slate-600 hover:bg-slate-100 transition-colors"
                     title="Start Over"
                 >
@@ -262,6 +265,13 @@ const App = () => {
                 isOpen={isLinkRepoOpen}
                 onClose={() => setIsLinkRepoOpen(false)}
                 projects={PROJECTS}
+            />
+            <ConfirmationModal
+                isOpen={isResetConfirmOpen}
+                onClose={() => setIsResetConfirmOpen(false)}
+                onConfirm={resetState}
+                title="Start a New Workflow?"
+                message="This will clear all uploaded files and progress. This action cannot be undone."
             />
         </div>
     );

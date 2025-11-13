@@ -10,28 +10,25 @@ interface AdCopyEditorProps {
 }
 
 const getCharLimit = (field: string): number | null => {
+    if (typeof field !== 'string') {
+        return null;
+    }
     const lowerField = field.toLowerCase();
     if (lowerField.includes('headline')) return 30;
     if (lowerField.includes('description')) return 90;
     return null;
 }
 
-/**
- * A component that compares two strings and renders the updated version
- * with any changed words highlighted.
- */
 const HighlightedText: React.FC<{ originalText: string; updatedText: string }> = ({ originalText, updatedText }) => {
-    const originalParts = originalText.split(/(\s+)/); // Split by spaces, keeping them
+    const originalParts = originalText.split(/(\s+)/);
     const updatedParts = updatedText.split(/(\s+)/);
 
     return (
-        <p className="mt-1 text-indigo-800 font-medium leading-relaxed">
+        <p className="mt-1 text-cyan-300 font-medium leading-relaxed">
             {updatedParts.map((part, index) => {
-                // Highlight if the part is different from the original at the same position,
-                // or if the original text is shorter (indicating an addition).
                 if (part !== originalParts[index]) {
                     return (
-                        <span key={index} className="bg-yellow-200 rounded-sm px-0.5">
+                        <span key={index} className="bg-cyan-500/20 rounded-sm px-0.5">
                             {part}
                         </span>
                     );
@@ -45,25 +42,24 @@ const HighlightedText: React.FC<{ originalText: string; updatedText: string }> =
 
 const AdCopyCard: React.FC<{ title: string, copy: AdCopy[], isUpdated?: boolean, delay?: number, originalCopy?: AdCopy[] }> = ({ title, copy, isUpdated = false, delay = 0, originalCopy }) => (
     <div 
-        className={`bg-white p-4 rounded-lg border border-slate-200 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden animate-fade-in-slide-up`}
+        className={`bg-gray-800 p-4 rounded-lg border border-gray-700 hover:border-gray-600 transition-colors relative overflow-hidden animate-fade-in-slide-up`}
         style={{ animationDelay: `${delay}ms` }}
     >
-        {isUpdated && <div className="absolute top-0 left-0 h-1 w-full bg-gradient-to-r from-indigo-500 to-blue-500"></div>}
-        <h4 className="text-md font-semibold text-slate-700 mb-3">{title}</h4>
+        {isUpdated && <div className="absolute top-0 left-0 h-1 w-full bg-gradient-to-r from-sky-500 to-indigo-500" style={{ filter: 'drop-shadow(0 0 4px var(--color-accent-glow))' }}></div>}
+        <h4 className="text-md font-semibold text-gray-200 mb-3">{title}</h4>
         <div className="space-y-3">
             {copy.map((ad, index) => {
                 const charLimit = getCharLimit(ad.field);
                 const isOverLimit = charLimit ? ad.text.length > charLimit : false;
                 
-                // Find the corresponding original ad to perform a diff against it
                 const originalAd = originalCopy?.find(o => o.field === ad.field);
 
                 return (
-                    <div key={index} className="text-sm p-3 rounded-md bg-slate-50 border border-slate-200">
+                    <div key={index} className="text-sm p-3 rounded-md bg-gray-900/70 border border-gray-700">
                         <div className="flex justify-between items-baseline">
-                             <p className="font-semibold text-xs text-slate-500 uppercase tracking-wider">{ad.field}</p>
+                             <p className="font-semibold text-xs text-gray-400 uppercase tracking-wider">{ad.field}</p>
                              {charLimit && (
-                                <span className={`text-xs font-mono font-medium ${isOverLimit ? 'text-red-500' : 'text-slate-400'}`}>
+                                <span className={`text-xs font-mono font-medium ${isOverLimit ? 'text-red-400' : 'text-gray-500'}`}>
                                     {ad.text.length}/{charLimit}
                                 </span>
                             )}
@@ -71,12 +67,12 @@ const AdCopyCard: React.FC<{ title: string, copy: AdCopy[], isUpdated?: boolean,
                         {isUpdated && originalAd && !isOverLimit ? (
                             <HighlightedText originalText={originalAd.text} updatedText={ad.text} />
                         ) : (
-                             <p className={`mt-1 ${isUpdated ? 'text-indigo-800 font-medium' : 'text-slate-800'}`}>{ad.text}</p>
+                             <p className={`mt-1 ${isUpdated ? 'text-cyan-300 font-medium' : 'text-gray-200'}`}>{ad.text}</p>
                         )}
                     </div>
                 )
             })}
-            {copy.length === 0 && <p className="text-sm text-slate-500 italic">No ad copy provided.</p>}
+            {copy.length === 0 && <p className="text-sm text-gray-500 italic">No ad copy provided.</p>}
         </div>
     </div>
 );
@@ -116,15 +112,15 @@ const AdCopyEditor: React.FC<AdCopyEditorProps> = ({
         : renderComparison(originalMetaCopy, updatedMetaCopy, 'Meta');
 
     return (
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200 h-full flex flex-col">
-            <div className="flex-shrink-0 border-b border-slate-200 mb-4">
+        <div className="bg-gray-800 p-6 rounded-xl border border-gray-700 h-full flex flex-col">
+            <div className="flex-shrink-0 border-b border-gray-700 mb-4">
                 <nav className="-mb-px flex space-x-2">
                     <button
                         onClick={() => setActiveTab('google')}
                         className={`whitespace-nowrap py-3 px-4 rounded-t-md font-medium text-sm transition-colors ${
                             activeTab === 'google'
-                                ? 'border-b-2 border-indigo-500 text-indigo-600 bg-indigo-50'
-                                : 'border-b-2 border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-100'
+                                ? 'border-b-2 border-sky-400 text-sky-300 bg-gray-900/30'
+                                : 'border-b-2 border-transparent text-gray-400 hover:text-gray-200 hover:bg-gray-700/50'
                         }`}
                     >
                         Google Ads
@@ -133,8 +129,8 @@ const AdCopyEditor: React.FC<AdCopyEditorProps> = ({
                         onClick={() => setActiveTab('meta')}
                         className={`whitespace-nowrap py-3 px-4 rounded-t-md font-medium text-sm transition-colors ${
                             activeTab === 'meta'
-                                ? 'border-b-2 border-indigo-500 text-indigo-600 bg-indigo-50'
-                                : 'border-b-2 border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-100'
+                                ? 'border-b-2 border-sky-400 text-sky-300 bg-gray-900/30'
+                                : 'border-b-2 border-transparent text-gray-400 hover:text-gray-200 hover:bg-gray-700/50'
                         }`}
                     >
                         Meta Ads

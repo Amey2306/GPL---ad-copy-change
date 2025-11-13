@@ -49,7 +49,7 @@ const ApprovalTracker: React.FC<ApprovalTrackerProps> = ({ history, status }) =>
         if (completed) {
             return {
                 iconBg: 'bg-emerald-500',
-                textColor: 'text-slate-800',
+                textColor: 'text-gray-100',
                 icon: (
                     <svg className="h-4 w-4 text-white" viewBox="0 0 20 20" fill="currentColor">
                         <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
@@ -59,24 +59,23 @@ const ApprovalTracker: React.FC<ApprovalTrackerProps> = ({ history, status }) =>
         }
         if (isCurrent) {
             return {
-                iconBg: 'bg-indigo-500 ring-4 ring-indigo-200',
-                textColor: 'text-indigo-600 font-semibold',
-                icon: <div className="h-2 w-2 bg-white rounded-full"></div>,
+                iconBg: 'bg-sky-500 ring-4 ring-sky-500/20',
+                textColor: 'text-sky-300 font-semibold',
+                icon: <div className="h-2 w-2 bg-gray-900 rounded-full"></div>,
             };
         }
         return {
-            iconBg: 'bg-slate-300',
-            textColor: 'text-slate-500',
-            icon: <div className="h-2 w-2 bg-white rounded-full"></div>,
+            iconBg: 'bg-gray-600',
+            textColor: 'text-gray-400',
+            icon: <div className="h-2 w-2 bg-gray-400 rounded-full"></div>,
         };
     };
 
     return (
-        <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
-            <h3 className="text-base font-semibold text-slate-800 mb-4">Approval Timeline</h3>
+        <div className="bg-gray-800 p-4 rounded-xl border border-gray-700">
+            <h3 className="text-base font-semibold text-gray-100 mb-4">Approval Timeline</h3>
             <div className="relative">
-                {/* Timeline line */}
-                <div className="absolute left-3.5 top-0 h-full w-0.5 bg-slate-200" aria-hidden="true"></div>
+                <div className="absolute left-3.5 top-0 h-full w-0.5 bg-gray-700" aria-hidden="true"></div>
                 
                 <ul className="space-y-4">
                     {timeline.map((item, index) => {
@@ -88,7 +87,7 @@ const ApprovalTracker: React.FC<ApprovalTrackerProps> = ({ history, status }) =>
                                 </div>
                                 <div className="flex-1">
                                     <p className={`text-sm font-medium ${classes.textColor}`}>{item.name}</p>
-                                    {item.timestamp && <p className="text-xs text-slate-500">{item.timestamp}</p>}
+                                    {item.timestamp && <p className="text-xs text-gray-500">{item.timestamp}</p>}
                                 </div>
                             </li>
                         )

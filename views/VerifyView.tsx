@@ -16,12 +16,7 @@ interface VerifyViewProps {
     addLog: (project: string, description: string) => void;
 }
 
-const LoadingSpinner = () => (
-    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-    </svg>
-);
+const LoadingSpinner = () => <div className="holo-spinner -ml-1 mr-2"></div>;
 
 const CATEGORY_MAP: { [key: string]: string } = {
   overviewPage: 'Overview Page Link',
@@ -96,7 +91,6 @@ const VerifyView: React.FC<VerifyViewProps> = ({
                 setError(e.message);
             }
 
-            // Add a delay between API calls to avoid rate limiting
             if (i < selectedLinks.length - 1) {
                 await new Promise(resolve => setTimeout(resolve, 1200));
             }
@@ -109,10 +103,10 @@ const VerifyView: React.FC<VerifyViewProps> = ({
     };
 
     return (
-        <div className="w-full p-4 sm:p-8 bg-slate-50 overflow-y-auto custom-scrollbar">
+        <div className="w-full p-4 sm:p-8 bg-gray-900 overflow-y-auto custom-scrollbar">
             <div className="flex-shrink-0 mb-6 sm:mb-8">
-                <h1 className="text-2xl sm:text-3xl font-bold text-slate-800">Verify & Export</h1>
-                <p className="text-slate-500 mt-2">Verify that the approved changes are live on the project websites before exporting.</p>
+                <h1 className="text-2xl sm:text-3xl font-bold text-gray-100">Verify & Export</h1>
+                <p className="text-gray-400 mt-2">Verify that the approved changes are live on the project websites before exporting.</p>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -122,32 +116,32 @@ const VerifyView: React.FC<VerifyViewProps> = ({
                 </div>
 
                 <div className="lg:col-span-2 space-y-6">
-                    <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-                        <h3 className="text-lg font-semibold text-slate-800 mb-3">1. Select URLs to Verify</h3>
-                        <div className="space-y-3">
+                    <div className="bg-gray-800 p-6 rounded-xl border border-gray-700">
+                        <h3 className="text-lg font-semibold text-gray-100 mb-3">1. Select URLs to Verify</h3>
+                        <div className="space-y-3 max-h-64 overflow-y-auto custom-scrollbar pr-2 -mr-2">
                             {availableLinks.map(link => (
-                                <label key={link.url} className="flex items-center p-3 bg-slate-50 rounded-lg border border-slate-200 cursor-pointer hover:bg-slate-100 transition">
+                                <label key={link.url} className="flex items-center p-3 bg-gray-900/50 rounded-lg border border-gray-700 cursor-pointer hover:bg-gray-700/50 transition">
                                     <input
                                         type="checkbox"
-                                        className="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                                        className="h-4 w-4 rounded border-gray-600 bg-gray-800 text-sky-500 focus:ring-sky-500"
                                         checked={selectedLinks.includes(link.url)}
                                         onChange={() => handleLinkToggle(link.url)}
                                     />
-                                    <span className="ml-3 text-sm font-medium text-slate-700">{link.name}</span>
+                                    <span className="ml-3 text-sm font-medium text-gray-300">{link.name}</span>
                                 </label>
                             ))}
                         </div>
                         <button
                             onClick={handleVerify}
                             disabled={selectedLinks.length === 0 || isVerifying}
-                            className="w-full mt-4 flex justify-center items-center py-3 px-5 bg-slate-700 text-white font-semibold rounded-lg shadow-sm hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500 disabled:bg-slate-400 disabled:cursor-not-allowed transition-all"
+                            className="w-full mt-4 flex justify-center items-center py-3 px-5 bg-gray-700 text-white font-semibold rounded-lg shadow-sm hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 focus:ring-sky-500 disabled:bg-gray-600 disabled:cursor-not-allowed transition-all"
                         >
                             {isVerifying ? <LoadingSpinner /> : null}
                             {isVerifying ? `Verifying... (${verificationProgress}/${selectedLinks.length})` : `Verify ${selectedLinks.length} Selected URLs`}
                         </button>
                     </div>
-                    <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-                        <h3 className="text-lg font-semibold text-slate-800 mb-3">2. Verification Results</h3>
+                    <div className="bg-gray-800 p-6 rounded-xl border border-gray-700">
+                        <h3 className="text-lg font-semibold text-gray-100 mb-3">2. Verification Results</h3>
                         <VerificationResultDisplay results={verificationResults} />
                     </div>
                 </div>
@@ -156,13 +150,13 @@ const VerifyView: React.FC<VerifyViewProps> = ({
             <div className="mt-8 flex justify-between items-center">
                 <button
                     onClick={onBack}
-                    className="py-2 px-5 bg-white text-slate-700 font-semibold rounded-lg shadow-sm border border-slate-300 hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all transform hover:-translate-y-0.5 active:translate-y-0"
+                    className="py-2 px-5 bg-gray-700 text-gray-200 font-semibold rounded-lg shadow-sm border border-gray-600 hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 focus:ring-sky-500 transition-all transform hover:-translate-y-0.5 active:translate-y-0"
                 >
                     Back to Review
                 </button>
                 <button
                     onClick={onExport}
-                    className="py-3 px-8 bg-gradient-to-r from-emerald-500 to-green-500 text-white font-semibold rounded-lg shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-all text-lg transform hover:-translate-y-0.5 active:translate-y-0"
+                    className="py-3 px-8 bg-gradient-to-r from-emerald-500 to-green-500 text-white font-semibold rounded-lg shadow-lg hover:shadow-emerald-500/30 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 focus:ring-emerald-400 transition-all text-lg transform hover:-translate-y-0.5 active:translate-y-0"
                 >
                     Export Approved Copy
                 </button>

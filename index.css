@@ -1,84 +1,64 @@
-
 :root {
   --font-sans: 'Inter', sans-serif;
   
-  /* New Color Palette */
-  --color-primary-600: #4F46E5; /* Indigo 600 */
-  --color-primary-700: #4338CA; /* Indigo 700 */
-  --color-primary-glow: rgba(79, 70, 229, 0.4);
+  /* Futuristic Dark Theme Palette */
+  --color-background: #111827; /* Gray 900 */
+  --color-surface: #1F2937;    /* Gray 800 */
+  --color-surface-light: #374151; /* Gray 700 */
 
-  --color-background: #F8FAFC; /* Slate 50 */
-  --color-surface: #FFFFFF;
+  --color-accent: #38BDF8;      /* Light Blue 400 */
+  --color-accent-glow: rgba(56, 189, 248, 0.4);
+  --color-accent-dark: #0EA5E9;   /* Sky 500 */
   
-  --color-text-primary: #1E293B;   /* Slate 800 */
-  --color-text-secondary: #64748B; /* Slate 500 */
-  --color-text-tertiary: #94A3B8;   /* Slate 400 */
+  --color-text-primary: #F9FAFB;   /* Gray 50 */
+  --color-text-secondary: #9CA3AF; /* Gray 400 */
+  --color-text-tertiary: #6B7280;   /* Gray 500 */
 
-  --color-border: #E2E8F0; /* Slate 200 */
-  --color-border-hover: #CBD5E1; /* Slate 300 */
+  --color-border: #374151; /* Gray 700 */
+  --color-border-hover: #4B5563; /* Gray 600 */
   
   /* Feedback Colors */
-  --color-success: #10B981; /* Emerald 500 */
-  --color-warning: #F59E0B; /* Amber 500 */
-  --color-danger: #EF4444; /* Red 500 */
+  --color-success: #34D399; /* Emerald 400 */
+  --color-warning: #FBBF24; /* Amber 400 */
+  --color-danger: #F87171; /* Red 400 */
 }
 
-body {
+body.dark {
   font-family: var(--font-sans);
   background-color: var(--color-background);
   color: var(--color-text-primary);
 }
 
-/* Global Transitions for smooth animations */
 * {
-    transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, box-shadow, transform, filter, -webkit-backdrop-filter;
-    transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, box-shadow, transform, filter, backdrop-filter;
-    transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, box-shadow, transform, filter, backdrop-filter, -webkit-backdrop-filter;
+    transition-property: color, background-color, border-color, box-shadow, filter, transform;
     transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
     transition-duration: 200ms;
 }
-
 
 .custom-scrollbar::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
-
 .custom-scrollbar::-webkit-scrollbar-track {
-  background-color: #f1f1f1;
+  background-color: var(--color-background);
   border-radius: 10px;
 }
-
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background-color: #c1c1c1;
+  background-color: var(--color-surface-light);
   border-radius: 10px;
 }
-
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background-color: #a8a8a8;
+  background-color: var(--color-text-tertiary);
 }
 
-.transition-all-fast {
-    transition-property: all;
-    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-    transition-duration: 200ms;
-}
-
-/* Animation Keyframes */
+/* Keyframe Animations */
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from { opacity: 0; } to { opacity: 1; }
 }
 
 @keyframes fadeInSlideUp {
-  from { 
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to { 
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .animate-fade-in {
@@ -87,5 +67,20 @@ body {
 
 .animate-fade-in-slide-up {
   animation: fadeInSlideUp 0.5s ease-out forwards;
-  opacity: 0; /* Start hidden */
+  opacity: 0;
+}
+
+/* Holographic Loader */
+@keyframes holo-spinner {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+.holo-spinner {
+  width: 28px;
+  height: 28px;
+  border: 3px solid transparent;
+  border-top-color: var(--color-accent);
+  border-radius: 50%;
+  animation: holo-spinner 1s linear infinite;
+  box-shadow: 0 0 10px var(--color-accent-glow);
 }

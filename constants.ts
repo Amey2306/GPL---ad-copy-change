@@ -14,7 +14,7 @@ export const INITIAL_META_ADS: AdCopy[] = [
     { field: 'Description', text: 'Premium Residences by Godrej' },
 ];
 
-export const PROJECTS: Project[] = [
+export const PROJECTS: Omit<Project, 'id'>[] = [
     {
         name: 'Godrej Sky Terraces',
         city: 'Mumbai',

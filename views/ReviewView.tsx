@@ -3,7 +3,7 @@ import ImagePreview from '../components/ImagePreview';
 import AnalysisResult from '../components/AnalysisResult';
 import AdCopyEditor from '../components/AdCopyEditor';
 import ApprovalTracker from '../components/ApprovalTracker';
-import { AdCopy, AppState, ApprovalEvent } from '../types';
+import { AdCopy, AppState, ApprovalEvent, BrandManager } from '../types';
 
 interface ReviewViewProps {
     appState: AppState;
@@ -19,6 +19,7 @@ interface ReviewViewProps {
     onBack: () => void;
     isGenerated: boolean;
     approvalHistory: ApprovalEvent[];
+    brandManager: BrandManager | null;
 }
 
 const ReviewView: React.FC<ReviewViewProps> = ({
@@ -34,7 +35,8 @@ const ReviewView: React.FC<ReviewViewProps> = ({
     onProceedToVerify,
     onBack,
     isGenerated,
-    approvalHistory
+    approvalHistory,
+    brandManager
 }) => {
     if (creativeFiles.length === 0) return null;
 
@@ -44,18 +46,21 @@ const ReviewView: React.FC<ReviewViewProps> = ({
         switch (appState) {
             case AppState.REVIEW:
                 return (
-                    <button
-                        onClick={onSendForApproval}
-                        className="py-3 px-8 bg-gradient-to-r from-indigo-600 to-blue-500 text-white font-semibold rounded-lg shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all text-lg transform hover:-translate-y-0.5 active:translate-y-0"
-                    >
-                        Send for Approval
-                    </button>
+                    <div className="text-right">
+                        <button
+                            onClick={onSendForApproval}
+                            className="py-3 px-8 bg-gradient-to-r from-sky-500 to-indigo-500 text-white font-semibold rounded-lg shadow-lg hover:shadow-sky-500/30 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 focus:ring-sky-400 transition-all text-lg transform hover:-translate-y-0.5 active:translate-y-0"
+                        >
+                            Send for Approval
+                        </button>
+                         {brandManager && <p className="text-xs text-gray-500 mt-2">Will be sent to: <span className="font-medium text-gray-400">{brandManager.name}</span></p>}
+                    </div>
                 );
             case AppState.APPROVAL_PENDING:
                  return (
                     <button
                         onClick={onMarkAsApproved}
-                        className="py-3 px-8 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-semibold rounded-lg shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 transition-all text-lg transform hover:-translate-y-0.5 active:translate-y-0"
+                        className="py-3 px-8 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-semibold rounded-lg shadow-lg hover:shadow-amber-500/30 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 focus:ring-amber-400 transition-all text-lg transform hover:-translate-y-0.5 active:translate-y-0"
                     >
                         Mark as Approved
                     </button>
@@ -64,7 +69,7 @@ const ReviewView: React.FC<ReviewViewProps> = ({
                  return (
                     <button
                         onClick={onProceedToVerify}
-                        className="py-3 px-8 bg-gradient-to-r from-emerald-500 to-green-500 text-white font-semibold rounded-lg shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-all text-lg transform hover:-translate-y-0.5 active:translate-y-0"
+                        className="py-3 px-8 bg-gradient-to-r from-emerald-500 to-green-500 text-white font-semibold rounded-lg shadow-lg hover:shadow-emerald-500/30 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 focus:ring-emerald-400 transition-all text-lg transform hover:-translate-y-0.5 active:translate-y-0"
                     >
                         Proceed to Verification
                     </button>
@@ -75,21 +80,19 @@ const ReviewView: React.FC<ReviewViewProps> = ({
     }
 
     return (
-        <div className="w-full p-4 sm:p-8 bg-slate-50 overflow-y-auto custom-scrollbar">
+        <div className="w-full h-full p-4 sm:p-8 bg-gray-900 overflow-y-auto custom-scrollbar">
             <div className="flex-shrink-0 mb-6 sm:mb-8">
-                <h1 className="text-2xl sm:text-3xl font-bold text-slate-800">Review & Refine</h1>
-                <p className="text-slate-500 mt-2">Review Gemini's analysis and updated copy. Manage the approval process to proceed.</p>
+                <h1 className="text-2xl sm:text-3xl font-bold text-gray-100">Review & Refine</h1>
+                <p className="text-gray-400 mt-2">Review Gemini's analysis and updated copy. Manage the approval process to proceed.</p>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* Left column */}
                 <div className="lg:col-span-1 space-y-6">
                     <ImagePreview imageUrls={imageUrls} isCompact />
                     <AnalysisResult analysis={analysis} isCompact />
                     <ApprovalTracker history={approvalHistory} status={appState} />
                 </div>
 
-                {/* Right column */}
                 <div className="lg:col-span-2">
                     <AdCopyEditor
                         originalGoogleCopy={originalGoogleAds}
@@ -105,7 +108,7 @@ const ReviewView: React.FC<ReviewViewProps> = ({
                 <button
                     onClick={onBack}
                     disabled={appState !== AppState.REVIEW}
-                    className="py-2 px-5 bg-white text-slate-700 font-semibold rounded-lg shadow-sm border border-slate-300 hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all transform hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="py-2 px-5 bg-gray-700 text-gray-200 font-semibold rounded-lg shadow-sm border border-gray-600 hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 focus:ring-sky-500 transition-all transform hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                     Back to Upload
                 </button>

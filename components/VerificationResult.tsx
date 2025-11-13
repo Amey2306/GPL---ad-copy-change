@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { VerificationResult } from '../types';
 
@@ -14,36 +13,40 @@ const VerificationResultDisplay: React.FC<VerificationResultDisplayProps> = ({ r
                     const isError = result.error;
                     const isVerified = result.verified;
                     
-                    let borderColor = 'border-slate-200';
-                    let statusBgColor = 'bg-slate-100';
-                    let statusTextColor = 'text-slate-600';
-                    let reasonTextColor = 'text-slate-700';
+                    let borderColor = 'border-gray-700';
+                    let statusBgColor = 'bg-gray-700';
+                    let statusTextColor = 'text-gray-300';
+                    let reasonTextColor = 'text-gray-200';
+                    let glowFilter = '';
                     
                     if (isError) {
-                        borderColor = 'border-amber-300';
-                        statusBgColor = 'bg-amber-100';
-                        statusTextColor = 'text-amber-600';
-                        reasonTextColor = 'text-amber-800';
+                        borderColor = 'border-amber-500/30';
+                        statusBgColor = 'bg-amber-500/10';
+                        statusTextColor = 'text-amber-400';
+                        reasonTextColor = 'text-amber-300';
+                        glowFilter = 'drop-shadow(0 0 5px var(--color-warning))';
                     } else if (isVerified) {
-                        borderColor = 'border-emerald-300';
-                        statusBgColor = 'bg-emerald-100';
-                        statusTextColor = 'text-emerald-600';
-                        reasonTextColor = 'text-emerald-800';
+                        borderColor = 'border-emerald-500/30';
+                        statusBgColor = 'bg-emerald-500/10';
+                        statusTextColor = 'text-emerald-400';
+                        reasonTextColor = 'text-emerald-300';
+                        glowFilter = 'drop-shadow(0 0 5px var(--color-success))';
                     } else {
-                        borderColor = 'border-red-300';
-                        statusBgColor = 'bg-red-100';
-                        statusTextColor = 'text-red-600';
-                        reasonTextColor = 'text-red-800';
+                        borderColor = 'border-red-500/30';
+                        statusBgColor = 'bg-red-500/10';
+                        statusTextColor = 'text-red-400';
+                        reasonTextColor = 'text-red-300';
+                        glowFilter = 'drop-shadow(0 0 5px var(--color-danger))';
                     }
 
                     return (
                         <div 
                             key={index} 
-                            className={`bg-white p-4 rounded-xl shadow-sm border flex items-start space-x-4 ${borderColor} animate-fade-in-slide-up`}
+                            className={`bg-gray-900/50 p-4 rounded-xl border flex items-start space-x-4 ${borderColor} animate-fade-in-slide-up`}
                             style={{ animationDelay: `${index * 100}ms` }}
                         >
                             <div className="flex-shrink-0 pt-1">
-                                <div className={`w-6 h-6 rounded-full ${statusBgColor} flex items-center justify-center`}>
+                                <div className={`w-6 h-6 rounded-full ${statusBgColor} flex items-center justify-center`} style={{ filter: glowFilter }}>
                                 {isError ? (
                                     <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 ${statusTextColor}`} viewBox="0 0 20 20" fill="currentColor">
                                         <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.21 3.03-1.742 3.03H4.42c-1.532 0-2.492-1.696-1.742-3.03l5.58-9.92zM10 13a1 1 0 110-2 1 1 0 010 2zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
@@ -60,8 +63,8 @@ const VerificationResultDisplay: React.FC<VerificationResultDisplayProps> = ({ r
                                 </div>
                             </div>
                             <div className="flex-1">
-                                <p className="font-semibold text-sm text-slate-800 break-all">
-                                    <a href={result.url} target="_blank" rel="noopener noreferrer" className="hover:text-indigo-600 hover:underline">
+                                <p className="font-semibold text-sm text-gray-200 break-all">
+                                    <a href={result.url} target="_blank" rel="noopener noreferrer" className="hover:text-sky-400 hover:underline">
                                         {result.name}
                                     </a>
                                 </p>
@@ -73,11 +76,11 @@ const VerificationResultDisplay: React.FC<VerificationResultDisplayProps> = ({ r
                     )
                 })
             ) : (
-                <div className="bg-white p-6 rounded-lg shadow-sm border border-slate-200 text-center animate-fade-in">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="mx-auto h-12 w-12 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <div className="bg-gray-900/30 p-6 rounded-lg border border-dashed border-gray-700 text-center animate-fade-in">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="mx-auto h-12 w-12 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
-                    <h3 className="mt-2 text-lg font-medium text-gray-900">No Results Yet</h3>
+                    <h3 className="mt-2 text-lg font-medium text-gray-300">No Results Yet</h3>
                     <p className="mt-1 text-sm text-gray-500">Select the URLs to check and click "Verify Live Changes".</p>
                 </div>
             )}

@@ -15,8 +15,8 @@ import ConfirmationModal from './components/ConfirmationModal';
 const App = () => {
     const [appState, setAppState] = useState<AppState>(AppState.UPLOAD);
     
-    // Upload state
-    const [creativeFile, setCreativeFile] = useState<File | null>(null);
+    // Upload state - now supports multiple creative files
+    const [creativeFiles, setCreativeFiles] = useState<File[]>([]);
     const [adCopyFile, setAdCopyFile] = useState<File | null>(null);
     const [selectedProject, setSelectedProject] = useState<Project | null>(null);
 
@@ -52,7 +52,7 @@ const App = () => {
     };
 
     const handleAnalyze = async (googleAds: AdCopy[], metaAds: AdCopy[]) => {
-        if (!creativeFile) return;
+        if (creativeFiles.length === 0) return;
         setIsProcessing(true);
         setError(null);
         setIsGenerated(false);
@@ -61,7 +61,7 @@ const App = () => {
 
         try {
             const adCopyText = [...googleAds, ...metaAds].map(ad => `${ad.field}: ${ad.text}`).join('\n');
-            const analysisResult = await geminiService.analyzeCreativeAndCopy(creativeFile, adCopyText);
+            const analysisResult = await geminiService.analyzeCreativeAndCopy(creativeFiles[0], adCopyText); // Use the first file for analysis
             setAnalysis(analysisResult);
 
             const suggestions = await geminiService.updateAdCopy(analysisResult, googleAds, metaAds);
@@ -81,14 +81,14 @@ const App = () => {
         }
     };
 
-    const handleGenerate = async (source: UploadSource) => {
-        if (!creativeFile) return;
+    const handleGenerate = async (sources: UploadSource[]) => {
+        if (creativeFiles.length === 0) return;
         setIsProcessing(true);
         setError(null);
         setIsGenerated(true);
 
         try {
-            const result = await geminiService.generateAdCopiesFromSource(creativeFile, source);
+            const result = await geminiService.generateAdCopiesFromSource(creativeFiles, sources);
             setAnalysis(result.analysis);
             setUpdatedGoogleAds(result.google);
             setUpdatedMetaAds(result.meta);
@@ -96,7 +96,7 @@ const App = () => {
             setOriginalMetaAds([]);
 
              if (selectedProject) {
-                addLog(LogType.GENERATE, selectedProject.name, `Generated new ad copy from ${source.type} source.`);
+                addLog(LogType.GENERATE, selectedProject.name, `Generated new ad copy from ${sources.length} source(s).`);
             }
 
             setAppState(AppState.REVIEW);
@@ -156,7 +156,7 @@ const App = () => {
 
     const resetState = () => {
         setAppState(AppState.UPLOAD);
-        setCreativeFile(null);
+        setCreativeFiles([]);
         setAdCopyFile(null);
         setError(null);
         setIsProcessing(false);
@@ -175,8 +175,8 @@ const App = () => {
                     onAnalyze={handleAnalyze} 
                     onGenerate={handleGenerate}
                     isAnalyzing={isProcessing}
-                    creativeFile={creativeFile}
-                    onCreativeFileChange={setCreativeFile}
+                    creativeFiles={creativeFiles}
+                    onCreativeFilesChange={setCreativeFiles}
                     adCopyFile={adCopyFile}
                     onAdCopyFileChange={setAdCopyFile}
                     error={error}
@@ -191,7 +191,7 @@ const App = () => {
             case AppState.APPROVED:
                 return <ReviewView 
                     appState={appState}
-                    creativeFile={creativeFile}
+                    creativeFiles={creativeFiles}
                     analysis={analysis}
                     originalGoogleAds={originalGoogleAds}
                     originalMetaAds={originalMetaAds}
@@ -207,7 +207,7 @@ const App = () => {
             case AppState.VERIFY:
                 return <VerifyView 
                     project={selectedProject}
-                    creativeFile={creativeFile}
+                    creativeFiles={creativeFiles}
                     analysis={analysis}
                     updatedGoogleAds={updatedGoogleAds}
                     updatedMetaAds={updatedMetaAds}

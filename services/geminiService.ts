@@ -114,42 +114,45 @@ Return ONLY a JSON object with two keys: "google" and "meta", containing the upd
 };
 
 
-export const generateAdCopiesFromSource = async (imageFile: File, source: UploadSource): Promise<{ analysis: string, google: AdCopy[], meta: AdCopy[]}> => {
+export const generateAdCopiesFromSource = async (imageFiles: File[], sources: UploadSource[]): Promise<{ analysis: string, google: AdCopy[], meta: AdCopy[]}> => {
     try {
-        const imagePart = await fileToGenerativePart(imageFile);
-        let sourceInfo: string;
-        let sourcePart: { inlineData: { data: string; mimeType: string; } } | null = null;
+        const imageParts = await Promise.all(imageFiles.map(file => fileToGenerativePart(file)));
+        const sourceParts = [];
+        const sourceInfoParts = [];
 
-        if (source.type === 'file' && source.content instanceof File) {
-            sourceInfo = `the provided document named "${source.content.name}"`;
-            sourcePart = await fileToGenerativePart(source.content);
-        } else if (source.type === 'url') {
-            sourceInfo = `the content from the YouTube URL: ${source.content}`;
-        } else {
-            sourceInfo = `the following text context`;
+        for (const source of sources) {
+            if (source.type === 'file' && source.content instanceof File) {
+                sourceInfoParts.push(`- a provided document named "${source.content.name}"`);
+                sourceParts.push(await fileToGenerativePart(source.content));
+            } else if (source.type === 'url') {
+                sourceInfoParts.push(`- the content from the YouTube URL: ${source.content}`);
+            } else if (source.type === 'text') {
+                sourceInfoParts.push(`- the following text context: "${source.content.substring(0, 100)}..."`);
+                sourceParts.push({ text: `\n**Source Text:**\n${source.content}` });
+            }
         }
+        
+        const sourceInfo = sourceInfoParts.join('\n');
 
-        const textPrompt = `You are an expert ad copywriter for Godrej Properties, a luxury real estate developer in India. Your task is to generate brand new ad copy for Google Ads and Meta Ads based on the provided creative image and source material.
+        const textPrompt = `You are an expert ad copywriter for Godrej Properties, a luxury real estate developer in India. Your task is to generate brand new ad copy for Google Ads and Meta Ads based on the provided creative images and a collection of source materials.
 
-**Source Material:** Analyze ${sourceInfo}.
-${source.type === 'text' ? `\n**Source Text:**\n${source.content}` : ''}
+**Source Materials:** Synthesize information from the following sources:
+- The provided ad creative images.
+${sourceInfo}
 
 **Task:**
-1.  Analyze the creative image and the source material to identify key USPs, offers, and property highlights.
+1.  Analyze all creative images and source materials to identify key USPs, offers, and property highlights.
 2.  Create compelling ad copy for both Google and Meta platforms.
 3.  **Strictly adhere to character limits:** Google headlines MUST be 30 characters or less. Google descriptions MUST be 90 characters or less.
 4.  The tone should be professional, aspirational, and persuasive, highlighting luxury and lifestyle benefits.
 5.  Structure the output as a JSON object with "analysis", "google", and "meta" keys.
-    -   The "analysis" key should contain a concise summary of your findings from the source material.
+    -   The "analysis" key should contain a concise summary of your findings from all source materials.
     -   For Google, provide 3 headlines and 2 descriptions.
     -   For Meta, provide a Primary Text, a Headline, and a Description.
 
 Return ONLY the JSON object.`;
 
-        const parts = [imagePart, { text: textPrompt }];
-        if (sourcePart) {
-            parts.push(sourcePart);
-        }
+        const parts = [...imageParts, { text: textPrompt }, ...sourceParts];
 
         const adCopySchema = {
             type: Type.OBJECT,

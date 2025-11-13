@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback } from 'react';
 import FileUpload from '../components/FileUpload';
 import AdCopyUpload from '../components/AdCopyUpload';
@@ -9,10 +8,10 @@ type UploadMode = 'upload' | 'generate';
 
 interface UploadViewProps {
     onAnalyze: (googleAds: AdCopy[], metaAds: AdCopy[]) => void;
-    onGenerate: (source: UploadSource) => void;
+    onGenerate: (sources: UploadSource[]) => void;
     isAnalyzing: boolean;
-    creativeFile: File | null;
-    onCreativeFileChange: (file: File | null) => void;
+    creativeFiles: File[];
+    onCreativeFilesChange: (files: File[]) => void;
     adCopyFile: File | null;
     onAdCopyFileChange: (file: File | null) => void;
     error: string | null;
@@ -34,8 +33,8 @@ const UploadView: React.FC<UploadViewProps> = ({
     onAnalyze, 
     onGenerate,
     isAnalyzing,
-    creativeFile,
-    onCreativeFileChange,
+    creativeFiles,
+    onCreativeFilesChange,
     adCopyFile,
     onAdCopyFileChange, 
     error, 
@@ -46,11 +45,7 @@ const UploadView: React.FC<UploadViewProps> = ({
     setSelectedProject
 }) => {
     const [uploadMode, setUploadMode] = useState<UploadMode>('upload');
-
-    const [sourceType, setSourceType] = useState<'text' | 'file' | 'url'>('text');
-    const [sourceText, setSourceText] = useState('');
-    const [sourceFile, setSourceFile] = useState<File | null>(null);
-    const [sourceUrl, setSourceUrl] = useState('');
+    const [sources, setSources] = useState<UploadSource[]>([]);
 
     const parseAdCopyExcel = useCallback(async (file: File) => {
         try {
@@ -103,7 +98,7 @@ const UploadView: React.FC<UploadViewProps> = ({
 
 
     const handleAnalyzeClick = async () => {
-        if (!creativeFile || !adCopyFile) return;
+        if (creativeFiles.length === 0 || !adCopyFile) return;
         onClearError();
         try {
             const { googleAds, metaAds } = await parseAdCopyExcel(adCopyFile);
@@ -114,24 +109,19 @@ const UploadView: React.FC<UploadViewProps> = ({
     };
 
     const handleGenerateClick = async () => {
-        if (!creativeFile) return;
+        if (creativeFiles.length === 0 || sources.length === 0) return;
         onClearError();
-        let source: UploadSource;
-        if (sourceType === 'text' && sourceText) {
-            source = { type: 'text', content: sourceText };
-        } else if (sourceType === 'file' && sourceFile) {
-            source = { type: 'file', content: sourceFile };
-        } else if (sourceType === 'url' && sourceUrl) {
-            source = { type: 'url', content: sourceUrl };
-        } else {
+        // Filter out any empty sources before submitting
+        const validSources = sources.filter(s => (s.type === 'file' ? s.content !== null : s.content.trim() !== ''));
+        if (validSources.length === 0) {
+            onError("Please provide content for at least one source material.");
             return;
         }
-        onGenerate(source);
+        onGenerate(validSources);
     };
     
-    const isAnalyzeDisabled = !selectedProject || !creativeFile || !adCopyFile;
-    const isGenerateDisabled = !selectedProject || !creativeFile || (sourceType === 'text' && !sourceText) || (sourceType === 'file' && !sourceFile) || (sourceType === 'url' && !sourceUrl);
-
+    const isAnalyzeDisabled = !selectedProject || creativeFiles.length === 0 || !adCopyFile;
+    const isGenerateDisabled = !selectedProject || creativeFiles.length === 0 || sources.length === 0 || sources.every(s => s.content === null || (typeof s.content === 'string' && s.content.trim() === ''));
 
     const renderUploadActions = () => (
          <div className="flex flex-col space-y-6 animate-fade-in">
@@ -153,35 +143,67 @@ const UploadView: React.FC<UploadViewProps> = ({
         </div>
     );
     
-    const renderGenerateActions = () => (
-         <div className="flex flex-col space-y-6 animate-fade-in">
-            <h2 className="text-xl font-semibold text-slate-800">3. Provide Source Material</h2>
-            <p className="text-sm text-slate-600 -mt-4">
-                Provide source material for Gemini to generate brand new ad copy from scratch.
-            </p>
-            <div>
-                 <div className="flex border-b border-slate-200">
-                    <button onClick={() => setSourceType('text')} className={`px-4 py-2 text-sm font-medium ${sourceType === 'text' ? 'border-b-2 border-indigo-500 text-indigo-600' : 'text-slate-500 hover:text-slate-700'}`}>Text</button>
-                    <button onClick={() => setSourceType('file')} className={`px-4 py-2 text-sm font-medium ${sourceType === 'file' ? 'border-b-2 border-indigo-500 text-indigo-600' : 'text-slate-500 hover:text-slate-700'}`}>File</button>
-                    <button onClick={() => setSourceType('url')} className={`px-4 py-2 text-sm font-medium ${sourceType === 'url' ? 'border-b-2 border-indigo-500 text-indigo-600' : 'text-slate-500 hover:text-slate-700'}`}>YouTube URL</button>
-                </div>
-                <div className="pt-4">
-                    {sourceType === 'text' && <textarea value={sourceText} onChange={(e) => setSourceText(e.target.value)} placeholder="Paste any relevant text here (e.g., brochure copy, project description)." className="w-full h-32 p-3 border border-slate-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 text-sm transition" />}
-                    {sourceType === 'file' && <input type="file" onChange={(e) => setSourceFile(e.target.files?.[0] || null)} className="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 transition cursor-pointer" accept=".pdf,.doc,.docx" />}
-                    {sourceType === 'url' && <input type="url" value={sourceUrl} onChange={(e) => setSourceUrl(e.target.value)} placeholder="https://www.youtube.com/watch?v=..." className="w-full p-3 border border-slate-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 text-sm transition" />}
-                </div>
-            </div>
-             <button
-                onClick={handleGenerateClick}
-                disabled={isGenerateDisabled || isAnalyzing}
-                className="w-full flex justify-center items-center py-4 px-6 bg-gradient-to-r from-indigo-600 to-blue-500 text-white font-semibold rounded-lg shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:bg-slate-400 disabled:cursor-not-allowed disabled:shadow-none transition-all text-lg transform hover:-translate-y-0.5 active:translate-y-0"
-            >
-                {isAnalyzing ? <LoadingSpinner /> : null}
-                {isAnalyzing ? 'Generating...' : 'Generate New Ad Copy'}
-            </button>
-        </div>
-    );
+    const renderGenerateActions = () => {
+        const addSource = (type: 'text' | 'file' | 'url') => {
+            const newSource: UploadSource = type === 'file' ? { type, content: null } : { type, content: '' };
+            setSources([...sources, newSource]);
+        };
 
+        const updateSource = (index: number, content: string | File) => {
+            const newSources = [...sources];
+            if (typeof content === 'string') {
+                (newSources[index] as { content: string }).content = content;
+            } else {
+                (newSources[index] as { content: File | null }).content = content;
+            }
+            setSources(newSources);
+        };
+        
+        const removeSource = (index: number) => {
+            setSources(sources.filter((_, i) => i !== index));
+        };
+
+        return (
+            <div className="flex flex-col space-y-4 animate-fade-in">
+                <h2 className="text-xl font-semibold text-slate-800">3. Provide Source Materials</h2>
+                <div className="space-y-3 max-h-56 overflow-y-auto custom-scrollbar pr-2 -mr-2">
+                    {sources.map((source, index) => (
+                        <div key={index} className="bg-slate-50 p-3 rounded-lg border border-slate-200 relative">
+                            <button onClick={() => removeSource(index)} className="absolute top-2 right-2 p-1 text-slate-400 hover:text-red-500"><svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg></button>
+                            {source.type === 'text' && (
+                                <textarea value={source.content as string} onChange={(e) => updateSource(index, e.target.value)} placeholder="Paste any relevant text here..." className="w-full h-24 p-2 border border-slate-300 rounded-md text-sm transition focus:ring-1 focus:ring-indigo-500" />
+                            )}
+                            {source.type === 'file' && (
+                                <div>
+                                    <label className="text-xs font-semibold text-slate-500 uppercase">Document</label>
+                                    <input type="file" onChange={(e) => updateSource(index, e.target.files?.[0] || null)} className="w-full text-sm text-slate-500 file:mr-4 file:py-1.5 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 transition cursor-pointer" accept=".pdf,.doc,.docx,.txt" />
+                                </div>
+                            )}
+                            {source.type === 'url' && (
+                                <div>
+                                    <label className="text-xs font-semibold text-slate-500 uppercase">YouTube URL</label>
+                                    <input type="url" value={source.content as string} onChange={(e) => updateSource(index, e.target.value)} placeholder="https://www.youtube.com/watch?v=..." className="w-full p-2 border border-slate-300 rounded-md text-sm transition focus:ring-1 focus:ring-indigo-500" />
+                                </div>
+                             )}
+                        </div>
+                    ))}
+                </div>
+                <div className="flex items-center space-x-2">
+                    <button onClick={() => addSource('text')} className="text-xs font-semibold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 py-1.5 px-3 rounded-full transition">+ Add Text</button>
+                    <button onClick={() => addSource('file')} className="text-xs font-semibold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 py-1.5 px-3 rounded-full transition">+ Add File</button>
+                    <button onClick={() => addSource('url')} className="text-xs font-semibold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 py-1.5 px-3 rounded-full transition">+ Add YouTube URL</button>
+                </div>
+                <button
+                    onClick={handleGenerateClick}
+                    disabled={isGenerateDisabled || isAnalyzing}
+                    className="w-full flex justify-center items-center py-4 px-6 bg-gradient-to-r from-indigo-600 to-blue-500 text-white font-semibold rounded-lg shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:bg-slate-400 disabled:cursor-not-allowed disabled:shadow-none transition-all text-lg transform hover:-translate-y-0.5 active:translate-y-0"
+                >
+                    {isAnalyzing ? <LoadingSpinner /> : null}
+                    {isAnalyzing ? 'Generating...' : 'Generate New Ad Copy'}
+                </button>
+            </div>
+        )
+    };
 
     return (
         <div className="w-full p-4 sm:p-8 flex flex-col bg-slate-50">
@@ -226,12 +248,16 @@ const UploadView: React.FC<UploadViewProps> = ({
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
                      <div className="flex flex-col space-y-4 bg-white p-6 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
-                        <h2 className="text-xl font-semibold text-slate-800">2. Upload Ad Creative</h2>
+                        <h2 className="text-xl font-semibold text-slate-800">2. Upload Ad Creative(s)</h2>
                         <p className="text-sm text-slate-600 -mt-2">
-                            Upload the primary image or video thumbnail for your ad campaign.
+                            Upload one or more images for your ad campaign.
                         </p>
                         <div className="h-48">
-                             <FileUpload onFileUpload={(file) => { onCreativeFileChange(file); onClearError(); }} file={creativeFile} onRemove={() => onCreativeFileChange(null)} />
+                             <FileUpload 
+                                files={creativeFiles} 
+                                onFilesChange={(files) => { onCreativeFilesChange(files); onClearError(); }} 
+                                multiple={uploadMode === 'generate'}
+                            />
                         </div>
                     </div>
                     

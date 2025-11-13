@@ -7,7 +7,7 @@ import { AdCopy, AppState, ApprovalEvent } from '../types';
 
 interface ReviewViewProps {
     appState: AppState;
-    creativeFile: File | null;
+    creativeFiles: File[];
     analysis: string;
     originalGoogleAds: AdCopy[];
     originalMetaAds: AdCopy[];
@@ -23,7 +23,7 @@ interface ReviewViewProps {
 
 const ReviewView: React.FC<ReviewViewProps> = ({
     appState,
-    creativeFile,
+    creativeFiles,
     analysis,
     originalGoogleAds,
     originalMetaAds,
@@ -36,9 +36,9 @@ const ReviewView: React.FC<ReviewViewProps> = ({
     isGenerated,
     approvalHistory
 }) => {
-    if (!creativeFile) return null;
+    if (creativeFiles.length === 0) return null;
 
-    const imageUrl = URL.createObjectURL(creativeFile);
+    const imageUrls = creativeFiles.map(file => URL.createObjectURL(file));
 
     const renderActionButtons = () => {
         switch (appState) {
@@ -84,7 +84,7 @@ const ReviewView: React.FC<ReviewViewProps> = ({
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Left column */}
                 <div className="lg:col-span-1 space-y-6">
-                    <ImagePreview imageUrl={imageUrl} isCompact />
+                    <ImagePreview imageUrls={imageUrls} isCompact />
                     <AnalysisResult analysis={analysis} isCompact />
                     <ApprovalTracker history={approvalHistory} status={appState} />
                 </div>

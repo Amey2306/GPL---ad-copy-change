@@ -7,7 +7,7 @@ import VerificationResultDisplay from '../components/VerificationResult';
 
 interface VerifyViewProps {
     project: Project | null;
-    creativeFile: File | null;
+    creativeFiles: File[];
     analysis: string;
     updatedGoogleAds: AdCopy[];
     updatedMetaAds: AdCopy[];
@@ -44,7 +44,7 @@ const formatLinkCategory = (key: string): string => {
 
 const VerifyView: React.FC<VerifyViewProps> = ({ 
     project, 
-    creativeFile, 
+    creativeFiles, 
     analysis, 
     onBack, 
     onExport,
@@ -53,6 +53,7 @@ const VerifyView: React.FC<VerifyViewProps> = ({
     const [selectedLinks, setSelectedLinks] = useState<string[]>([]);
     const [verificationResults, setVerificationResults] = useState<VerificationResultType[]>([]);
     const [isVerifying, setIsVerifying] = useState(false);
+    const [verificationProgress, setVerificationProgress] = useState(0);
     const [error, setError] = useState<string | null>(null);
 
     const availableLinks = useMemo((): ProjectLink[] => {
@@ -65,9 +66,9 @@ const VerifyView: React.FC<VerifyViewProps> = ({
             }));
     }, [project]);
 
-    if (!project || !creativeFile) return null;
+    if (!project || creativeFiles.length === 0) return null;
 
-    const imageUrl = URL.createObjectURL(creativeFile);
+    const imageUrls = creativeFiles.map(file => URL.createObjectURL(file));
 
     const handleLinkToggle = (url: string) => {
         setSelectedLinks(prev =>
@@ -80,24 +81,30 @@ const VerifyView: React.FC<VerifyViewProps> = ({
         setIsVerifying(true);
         setError(null);
         setVerificationResults([]);
+        setVerificationProgress(0);
 
-        const results: VerificationResultType[] = [];
-        
-        for (const url of selectedLinks) {
+        for (let i = 0; i < selectedLinks.length; i++) {
+            const url = selectedLinks[i];
+            setVerificationProgress(i + 1);
+
             const linkName = availableLinks.find(l => l.url === url)?.name || url;
             try {
                 const result = await geminiService.verifyUrl(url, analysis);
-                results.push({ ...result, url, name: linkName });
+                setVerificationResults(prev => [...prev, { ...result, url, name: linkName }]);
             } catch (e: any) {
-                results.push({ url, name: linkName, verified: false, reason: e.message, error: true });
+                setVerificationResults(prev => [...prev, { url, name: linkName, verified: false, reason: e.message, error: true }]);
                 setError(e.message);
+            }
+
+            // Add a delay between API calls to avoid rate limiting
+            if (i < selectedLinks.length - 1) {
+                await new Promise(resolve => setTimeout(resolve, 1200));
             }
         }
         
-        setVerificationResults(results);
         setIsVerifying(false);
         if (project) {
-            addLog(project.name, `Verification run for ${results.length} URLs.`);
+            addLog(project.name, `Verification run for ${selectedLinks.length} URLs.`);
         }
     };
 
@@ -110,7 +117,7 @@ const VerifyView: React.FC<VerifyViewProps> = ({
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <div className="lg:col-span-1 space-y-6">
-                    <ImagePreview imageUrl={imageUrl} isCompact />
+                    <ImagePreview imageUrls={imageUrls} isCompact />
                     <AnalysisResult analysis={analysis} isCompact />
                 </div>
 
@@ -136,7 +143,7 @@ const VerifyView: React.FC<VerifyViewProps> = ({
                             className="w-full mt-4 flex justify-center items-center py-3 px-5 bg-slate-700 text-white font-semibold rounded-lg shadow-sm hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500 disabled:bg-slate-400 disabled:cursor-not-allowed transition-all"
                         >
                             {isVerifying ? <LoadingSpinner /> : null}
-                            {isVerifying ? 'Verifying...' : `Verify ${selectedLinks.length} Selected URLs`}
+                            {isVerifying ? `Verifying... (${verificationProgress}/${selectedLinks.length})` : `Verify ${selectedLinks.length} Selected URLs`}
                         </button>
                     </div>
                     <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">

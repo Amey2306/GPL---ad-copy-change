@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { Project, VerificationResult as VerificationResultType, AdCopy, ProjectLink } from '../types';
 import * as geminiService from '../services/geminiService';
+import { exportAdCopyToExcel } from '../utils/exportUtils';
 import ImagePreview from '../components/ImagePreview';
 import AnalysisResult from '../components/AnalysisResult';
 import VerificationResultDisplay from '../components/VerificationResult';
@@ -12,7 +13,6 @@ interface VerifyViewProps {
     updatedGoogleAds: AdCopy[];
     updatedMetaAds: AdCopy[];
     onBack: () => void;
-    onExport: () => void;
     addLog: (project: string, description: string) => void;
 }
 
@@ -41,8 +41,9 @@ const VerifyView: React.FC<VerifyViewProps> = ({
     project, 
     creativeFiles, 
     analysis, 
+    updatedGoogleAds,
+    updatedMetaAds,
     onBack, 
-    onExport,
     addLog
 }) => {
     const [selectedLinks, setSelectedLinks] = useState<string[]>([]);
@@ -102,6 +103,15 @@ const VerifyView: React.FC<VerifyViewProps> = ({
         }
     };
 
+    const handleExport = () => {
+        if (project) {
+            exportAdCopyToExcel(updatedGoogleAds, updatedMetaAds, project.name);
+            addLog(project.name, "Approved ad copy has been exported.");
+        } else {
+            alert("Cannot export copy without a selected project.");
+        }
+    };
+
     return (
         <div className="w-full p-4 sm:p-8 bg-gray-900 overflow-y-auto custom-scrollbar">
             <div className="flex-shrink-0 mb-6 sm:mb-8">
@@ -155,7 +165,7 @@ const VerifyView: React.FC<VerifyViewProps> = ({
                     Back to Review
                 </button>
                 <button
-                    onClick={onExport}
+                    onClick={handleExport}
                     className="py-3 px-8 bg-gradient-to-r from-emerald-500 to-green-500 text-white font-semibold rounded-lg shadow-lg hover:shadow-emerald-500/30 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 focus:ring-emerald-400 transition-all text-lg transform hover:-translate-y-0.5 active:translate-y-0"
                 >
                     Export Approved Copy

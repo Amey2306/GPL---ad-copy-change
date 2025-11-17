@@ -246,6 +246,7 @@ const App: React.FC = () => {
                     onBack={() => setAppState(AppState.UPLOAD)}
                     isGenerated={isGenerated}
                     approvalHistory={approvalHistory}
+                    project={selectedProject}
                     brandManager={selectedBrandManager}
                 />;
             case AppState.VERIFY:
@@ -256,7 +257,6 @@ const App: React.FC = () => {
                     updatedGoogleAds={updatedGoogleAds}
                     updatedMetaAds={updatedMetaAds}
                     onBack={() => setAppState(AppState.REVIEW)}
-                    onExport={() => alert("Export functionality to be implemented.")}
                     addLog={(proj, desc) => addLog(proj, desc, selectedBrandManager || undefined)}
                  />;
             default:

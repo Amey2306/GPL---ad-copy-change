@@ -3,7 +3,9 @@ import ImagePreview from '../components/ImagePreview';
 import AnalysisResult from '../components/AnalysisResult';
 import AdCopyEditor from '../components/AdCopyEditor';
 import ApprovalTracker from '../components/ApprovalTracker';
-import { AdCopy, AppState, ApprovalEvent, BrandManager } from '../types';
+import { AdCopy, AppState, ApprovalEvent, BrandManager, Project } from '../types';
+import { exportAdCopyToExcel } from '../utils/exportUtils';
+
 
 interface ReviewViewProps {
     appState: AppState;
@@ -19,6 +21,7 @@ interface ReviewViewProps {
     onBack: () => void;
     isGenerated: boolean;
     approvalHistory: ApprovalEvent[];
+    project: Project | null;
     brandManager: BrandManager | null;
 }
 
@@ -36,11 +39,20 @@ const ReviewView: React.FC<ReviewViewProps> = ({
     onBack,
     isGenerated,
     approvalHistory,
+    project,
     brandManager
 }) => {
     if (creativeFiles.length === 0) return null;
 
     const imageUrls = creativeFiles.map(file => URL.createObjectURL(file));
+
+    const handleExport = () => {
+        if (project) {
+            exportAdCopyToExcel(updatedGoogleAds, updatedMetaAds, project.name);
+        } else {
+            alert("Cannot export copy without a selected project.");
+        }
+    };
 
     const renderActionButtons = () => {
         switch (appState) {
@@ -80,20 +92,20 @@ const ReviewView: React.FC<ReviewViewProps> = ({
     }
 
     return (
-        <div className="w-full h-full p-4 sm:p-8 bg-gray-900 overflow-y-auto custom-scrollbar">
+        <div className="w-full h-full flex flex-col p-4 sm:p-8 bg-gray-900">
             <div className="flex-shrink-0 mb-6 sm:mb-8">
                 <h1 className="text-2xl sm:text-3xl font-bold text-gray-100">Review & Refine</h1>
                 <p className="text-gray-400 mt-2">Review Gemini's analysis and updated copy. Manage the approval process to proceed.</p>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div className="lg:col-span-1 space-y-6">
+            <div className="flex-1 grid grid-cols-1 lg:grid-cols-3 gap-6 overflow-hidden">
+                <div className="lg:col-span-1 space-y-6 overflow-y-auto custom-scrollbar pr-2">
                     <ImagePreview imageUrls={imageUrls} isCompact />
                     <AnalysisResult analysis={analysis} isCompact />
                     <ApprovalTracker history={approvalHistory} status={appState} />
                 </div>
 
-                <div className="lg:col-span-2">
+                <div className="lg:col-span-2 overflow-y-auto custom-scrollbar pr-2">
                     <AdCopyEditor
                         originalGoogleCopy={originalGoogleAds}
                         originalMetaCopy={originalMetaAds}
@@ -104,7 +116,7 @@ const ReviewView: React.FC<ReviewViewProps> = ({
                 </div>
             </div>
 
-            <div className="mt-8 flex justify-between items-center">
+            <div className="flex-shrink-0 mt-8 flex justify-between items-center">
                 <button
                     onClick={onBack}
                     disabled={appState !== AppState.REVIEW}
@@ -112,7 +124,15 @@ const ReviewView: React.FC<ReviewViewProps> = ({
                 >
                     Back to Upload
                 </button>
-                {renderActionButtons()}
+                <div className="flex items-center space-x-4">
+                    <button
+                        onClick={handleExport}
+                        className="py-2 px-5 bg-emerald-600/20 text-emerald-300 border border-emerald-500/30 font-semibold rounded-lg hover:bg-emerald-600/40 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 focus:ring-emerald-500 transition-all transform hover:-translate-y-0.5 active:translate-y-0"
+                    >
+                        Export Copy
+                    </button>
+                    {renderActionButtons()}
+                </div>
             </div>
         </div>
     );

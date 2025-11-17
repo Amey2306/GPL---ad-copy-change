@@ -208,90 +208,92 @@ const UploadView: React.FC<UploadViewProps> = ({
     }
 
     return (
-        <div className="w-full p-4 sm:p-8 bg-gray-900 overflow-y-auto custom-scrollbar">
+        <div className="w-full h-full flex flex-col p-4 sm:p-8 bg-gray-900">
             <div className="flex-shrink-0 mb-6 sm:mb-8">
                 <h1 className="text-2xl sm:text-3xl font-bold text-gray-100">Upload Assets</h1>
                 <p className="text-gray-400 mt-2">Start a new workflow by selecting a project and uploading your creatives and source materials.</p>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-                {/* Left Column */}
-                <div className="lg:col-span-2 space-y-6">
-                    <div className="bg-gray-800 p-4 sm:p-6 rounded-xl border border-gray-700">
-                        <h3 className="text-lg font-semibold text-gray-100 mb-4">1. Select Project</h3>
-                        <div className="flex items-center space-x-2">
-                             <select
-                                value={selectedProject?.id || ''}
-                                onChange={handleProjectChange}
-                                className="block w-full bg-gray-900 border border-gray-600 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-sky-500 focus:border-sky-500 sm:text-sm"
+            <div className="flex-1 overflow-y-auto custom-scrollbar -mr-4 pr-4">
+                <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+                    {/* Left Column */}
+                    <div className="lg:col-span-2 space-y-6">
+                        <div className="bg-gray-800 p-4 sm:p-6 rounded-xl border border-gray-700">
+                            <h3 className="text-lg font-semibold text-gray-100 mb-4">1. Select Project</h3>
+                            <div className="flex items-center space-x-2">
+                                <select
+                                    value={selectedProject?.id || ''}
+                                    onChange={handleProjectChange}
+                                    className="block w-full bg-gray-900 border border-gray-600 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-sky-500 focus:border-sky-500 sm:text-sm"
+                                >
+                                    <option value="" disabled>Choose a project...</option>
+                                    {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                                </select>
+                                <button onClick={onAddProject} className="p-2 bg-gray-700 rounded-md hover:bg-gray-600" title="Add New Project">
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" /></svg>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div className={`bg-gray-800 p-4 sm:p-6 rounded-xl border border-gray-700 transition-opacity duration-500 ${selectedProject ? 'opacity-100' : 'opacity-50'}`}>
+                            <h3 className="text-lg font-semibold text-gray-100 mb-4">2. Assign Approver</h3>
+                            <select
+                                value={selectedBrandManager?.id || ''}
+                                onChange={(e) => {
+                                    const managerId = e.target.value;
+                                    const manager = brandManagers.find(m => m.id === managerId) || null;
+                                    setSelectedBrandManager(manager);
+                                }}
+                                disabled={!selectedProject}
+                                className="block w-full bg-gray-900 border border-gray-600 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-sky-500 focus:border-sky-500 sm:text-sm disabled:cursor-not-allowed"
                             >
-                                <option value="" disabled>Choose a project...</option>
-                                {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                                <option value="" disabled>{selectedProject ? (assignedManagers.length > 0 ? "Choose an approver..." : "No managers assigned") : "Select a project first"}</option>
+                                {assignedManagers.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
                             </select>
-                            <button onClick={onAddProject} className="p-2 bg-gray-700 rounded-md hover:bg-gray-600" title="Add New Project">
-                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" /></svg>
-                            </button>
+                        </div>
+
+                        <div className="bg-gray-800 p-4 sm:p-6 rounded-xl border border-gray-700">
+                            <h3 className="text-lg font-semibold text-gray-100 mb-4">3. Choose Workflow</h3>
+                            <div className="grid grid-cols-2 gap-3">
+                                <button onClick={() => setWorkflowType('update')} className={`p-4 rounded-lg border-2 text-left transition-all ${workflowType === 'update' ? 'border-sky-500 bg-sky-900/20 shadow-lg shadow-sky-500/10' : 'border-gray-600 bg-gray-900/30 hover:bg-gray-700/50'}`}>
+                                    <h4 className="font-semibold text-white">Update Existing Copy</h4>
+                                    <p className="text-xs text-gray-400 mt-1">Analyze a new creative against existing ad copy.</p>
+                                </button>
+                                <button onClick={() => setWorkflowType('generate')} className={`p-4 rounded-lg border-2 text-left transition-all ${workflowType === 'generate' ? 'border-sky-500 bg-sky-900/20 shadow-lg shadow-sky-500/10' : 'border-gray-600 bg-gray-900/30 hover:bg-gray-700/50'}`}>
+                                    <h4 className="font-semibold text-white">Generate New Copy</h4>
+                                    <p className="text-xs text-gray-400 mt-1">Create new ad copy from creatives and source material.</p>
+                                </button>
+                            </div>
                         </div>
                     </div>
 
-                    <div className={`bg-gray-800 p-4 sm:p-6 rounded-xl border border-gray-700 transition-opacity duration-500 ${selectedProject ? 'opacity-100' : 'opacity-50'}`}>
-                        <h3 className="text-lg font-semibold text-gray-100 mb-4">2. Assign Approver</h3>
-                         <select
-                            value={selectedBrandManager?.id || ''}
-                            onChange={(e) => {
-                                const managerId = e.target.value;
-                                const manager = brandManagers.find(m => m.id === managerId) || null;
-                                setSelectedBrandManager(manager);
-                            }}
-                            disabled={!selectedProject}
-                            className="block w-full bg-gray-900 border border-gray-600 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-sky-500 focus:border-sky-500 sm:text-sm disabled:cursor-not-allowed"
-                        >
-                            <option value="" disabled>{selectedProject ? (assignedManagers.length > 0 ? "Choose an approver..." : "No managers assigned") : "Select a project first"}</option>
-                             {assignedManagers.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
-                        </select>
-                    </div>
-
-                    <div className="bg-gray-800 p-4 sm:p-6 rounded-xl border border-gray-700">
-                        <h3 className="text-lg font-semibold text-gray-100 mb-4">3. Choose Workflow</h3>
-                        <div className="grid grid-cols-2 gap-3">
-                            <button onClick={() => setWorkflowType('update')} className={`p-4 rounded-lg border-2 text-left transition-all ${workflowType === 'update' ? 'border-sky-500 bg-sky-900/20 shadow-lg shadow-sky-500/10' : 'border-gray-600 bg-gray-900/30 hover:bg-gray-700/50'}`}>
-                                <h4 className="font-semibold text-white">Update Existing Copy</h4>
-                                <p className="text-xs text-gray-400 mt-1">Analyze a new creative against existing ad copy.</p>
-                            </button>
-                            <button onClick={() => setWorkflowType('generate')} className={`p-4 rounded-lg border-2 text-left transition-all ${workflowType === 'generate' ? 'border-sky-500 bg-sky-900/20 shadow-lg shadow-sky-500/10' : 'border-gray-600 bg-gray-900/30 hover:bg-gray-700/50'}`}>
-                                <h4 className="font-semibold text-white">Generate New Copy</h4>
-                                <p className="text-xs text-gray-400 mt-1">Create new ad copy from creatives and source material.</p>
-                            </button>
+                    {/* Right Column */}
+                    <div className="lg:col-span-3 space-y-6">
+                        <div className={`bg-gray-800 p-4 sm:p-6 rounded-xl border border-gray-700 h-64 transition-opacity duration-500 ${workflowType === 'update' || workflowType === 'generate' ? 'opacity-100' : 'opacity-50'}`}>
+                            <h3 className="text-lg font-semibold text-gray-100 mb-4">{workflowType === 'generate' ? '4. Upload Source Material' : '4. Upload Creative(s)'}</h3>
+                            {workflowType === 'generate' ? (
+                                renderSourceUploader()
+                            ) : (
+                                <FileUpload 
+                                    files={creativeFiles}
+                                    onFilesChange={setCreativeFiles}
+                                    multiple
+                                />
+                            )}
                         </div>
-                    </div>
-                </div>
-
-                {/* Right Column */}
-                <div className="lg:col-span-3 space-y-6">
-                    <div className={`bg-gray-800 p-4 sm:p-6 rounded-xl border border-gray-700 h-64 transition-opacity duration-500 ${workflowType === 'update' || workflowType === 'generate' ? 'opacity-100' : 'opacity-50'}`}>
-                        <h3 className="text-lg font-semibold text-gray-100 mb-4">{workflowType === 'generate' ? '4. Upload Source Material' : '4. Upload Creative(s)'}</h3>
-                        {workflowType === 'generate' ? (
-                            renderSourceUploader()
-                        ) : (
-                            <FileUpload 
-                                files={creativeFiles}
-                                onFilesChange={setCreativeFiles}
-                                multiple
+                        <div className={`bg-gray-800 p-4 sm:p-6 rounded-xl border border-gray-700 h-64 transition-opacity duration-500 ${workflowType === 'update' ? 'opacity-100' : 'opacity-50 pointer-events-none'} ${workflowType === 'generate' ? 'hidden' : ''}`}>
+                            <h3 className="text-lg font-semibold text-gray-100 mb-4">5. Upload Existing Ad Copy</h3>
+                            <AdCopyUpload 
+                                file={adCopyFile}
+                                onFileUpload={setAdCopyFile}
+                                onRemove={() => setAdCopyFile(null)}
                             />
-                        )}
-                    </div>
-                     <div className={`bg-gray-800 p-4 sm:p-6 rounded-xl border border-gray-700 h-64 transition-opacity duration-500 ${workflowType === 'update' ? 'opacity-100' : 'opacity-50 pointer-events-none'} ${workflowType === 'generate' ? 'hidden' : ''}`}>
-                        <h3 className="text-lg font-semibold text-gray-100 mb-4">5. Upload Existing Ad Copy</h3>
-                        <AdCopyUpload 
-                            file={adCopyFile}
-                            onFileUpload={setAdCopyFile}
-                            onRemove={() => setAdCopyFile(null)}
-                        />
+                        </div>
                     </div>
                 </div>
             </div>
             
-             <div className="mt-8 flex justify-end">
+             <div className="flex-shrink-0 mt-8 flex justify-end">
                 <button
                     onClick={handleProceed}
                     disabled={isProceedDisabled}

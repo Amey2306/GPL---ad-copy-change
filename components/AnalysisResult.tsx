@@ -16,7 +16,7 @@ const AnalysisResult: React.FC<AnalysisResultProps> = ({ analysis, isCompact = f
         
     const titleClasses = isCompact ? "text-base" : "text-lg";
 
-    const contentContainerClasses = isCompact ? "max-h-[calc(100vh-250px)] overflow-y-auto pr-2 custom-scrollbar" : "";
+    const contentContainerClasses = isCompact ? "pr-2 custom-scrollbar" : "";
 
     return (
         <div className={containerClasses}>

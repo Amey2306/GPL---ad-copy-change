@@ -94,6 +94,7 @@ ${JSON.stringify(metaAds, null, 2)}
 2.  **Critique the existing ad copy.** Assess how well it complements the new creative(s). Identify gaps or misalignments.
 3.  **Provide a concise analysis.** Summarize your findings in a brief report (3-4 bullet points).
 4.  **Suggest updated ad copy.** Rewrite the Google Ads and Meta Ads copy to be more effective with the new creative(s). Maintain the original structure (field names) for both platforms. Ensure the copy is compelling, brand-aligned, and drives action.
+5.  **IMPORTANT: For Google Ads, you MUST adhere to strict character limits: each Headline must be 30 characters or less, and each Description must be 90 characters or less.**
 
 Return a single JSON object with the specified schema.`;
 
@@ -129,7 +130,7 @@ export const generateAdCopy = async (
         : '';
 
     const prompt = `You are an expert digital marketing copywriter for Godrej Properties, a luxury real estate developer.
-Your task is to generate new Google Ads and Meta Ads copy based on the provided ad creatives, source materials, and project details.
+Your task is to generate new Google Ads and Meta Ads copy based on the provided ad creatives, source materials, and project details. You MUST use Google Search to gather the most up-to-date information.
 
 **Project Details:**
 - Project Name: ${project.name}
@@ -137,24 +138,40 @@ Your task is to generate new Google Ads and Meta Ads copy based on the provided 
 - Key Links: ${JSON.stringify(project.links, null, 2)}${youtubePrompt}
 
 **Instructions:**
-1.  **Analyze all the provided source material.** This includes images, PDFs, and content from any YouTube URLs. Identify the key themes, selling points, and visual elements (e.g., amenities, lifestyle, architecture, specific offers).
-2.  **Write a brief creative analysis.** Explain the strategy behind the copy you are about to write, based on all source materials (2-3 bullet points).
-3.  **Generate complete ad copy for Google Ads.** Provide copy for the following fields: Headline 1, Headline 2, Headline 3, Description 1, Description 2.
-4.  **Generate complete ad copy for Meta Ads.** Provide copy for the following fields: Primary Text, Headline, Description.
-5.  **Ensure the copy is compelling, brand-aligned, and drives action.** Use a tone that is sophisticated and aspirational.
+1.  **Use Google Search.** Find the latest information about "${project.name}", its surrounding area in "${project.location}, ${project.city}" (e.g., new infrastructure, lifestyle benefits, local attractions), and competitor messaging for similar luxury properties.
+2.  **Analyze all provided source material.** This includes images, PDFs, and content from any YouTube URLs, in addition to your search findings. Identify the key themes, selling points, and unique value propositions.
+3.  **Write a brief creative analysis.** Based on all source materials and your search, explain the strategy behind the copy you are about to write (2-3 bullet points).
+4.  **Generate complete ad copy for Google Ads.** Provide copy for the following fields: Headline 1, Headline 2, Headline 3, Description 1, Description 2.
+5.  **IMPORTANT: For Google Ads, you MUST adhere to strict character limits: each Headline must be 30 characters or less, and each Description must be 90 characters or less.**
+6.  **Generate complete ad copy for Meta Ads.** Provide copy for the following fields: Primary Text, Headline, Description.
+7.  **Ensure the copy is powerful, impactful, and data-driven.** Use a sophisticated, aspirational tone that reflects the latest information and stands out from competitors.
 
-Return a single JSON object with the specified schema.`;
+Return ONLY a single, valid JSON object with the following structure: { "analysis": string, "updatedGoogleCopy": [{ "field": string, "text": string }], "updatedMetaCopy": [{ "field": string, "text": string }] }. Do not include any other text or markdown formatting.`;
 
-    const response = await ai.models.generateContent({
-        model: model,
-        contents: { parts: [...imageParts, { text: prompt }] },
-        config: {
-            responseMimeType: "application/json",
-            responseSchema: adCopySchema,
+    try {
+        const response = await ai.models.generateContent({
+            model: model,
+            contents: { parts: [...imageParts, { text: prompt }] },
+            config: {
+                tools: [{ googleSearch: {} }],
+            }
+        });
+
+        let text = response.text;
+        const markdownMatch = text.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+        if (markdownMatch && markdownMatch[1]) {
+            text = markdownMatch[1];
         }
-    });
+        const jsonObjectMatch = text.match(/{[\s\S]*}/);
+        if (jsonObjectMatch && jsonObjectMatch[0]) {
+            return JSON.parse(jsonObjectMatch[0]);
+        }
+        throw new Error('Could not parse JSON from the model response for ad copy generation.');
 
-    return JSON.parse(response.text);
+    } catch (error) {
+        console.error("Error during ad copy generation:", error);
+        throw new Error("Failed to generate ad copy. The model returned an unexpected response.");
+    }
 };
 
 

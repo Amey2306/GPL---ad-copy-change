@@ -14,6 +14,14 @@ export const INITIAL_META_ADS: AdCopy[] = [
     { field: 'Description', text: 'Premium Residences by Godrej' },
 ];
 
+export const GOOGLE_ADS_CHAR_LIMITS: { [key: string]: number } = {
+    'Headline 1': 30,
+    'Headline 2': 30,
+    'Headline 3': 30,
+    'Description 1': 90,
+    'Description 2': 90,
+};
+
 export const PROJECTS: Omit<Project, 'id'>[] = [
     {
         name: 'Godrej Sky Terraces',

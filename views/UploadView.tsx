@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useRef } from 'react';
 import * as XLSX from 'xlsx';
 import { Project, BrandManager, AdCopy } from '../types';
 import FileUpload from '../components/FileUpload';
@@ -16,6 +16,8 @@ interface UploadViewProps {
     onAddProject: () => void;
     creativeFiles: File[];
     setCreativeFiles: (files: File[]) => void;
+    youtubeUrls: string[];
+    setYoutubeUrls: (urls: string[]) => void;
     adCopyFile: File | null;
     setAdCopyFile: (file: File | null) => void;
     workflowType: 'update' | 'generate';
@@ -38,25 +40,23 @@ const parseAdCopyXLSX = (file: File): Promise<{ googleAds: AdCopy[], metaAds: Ad
                     return;
                 }
                 
-                // Helper to parse sheets with case-insensitive headers
                 const parseSheet = (sheet: XLSX.WorkSheet): AdCopy[] => {
-                     const jsonData = XLSX.utils.sheet_to_json<any>(sheet);
-                     return jsonData
-                        .map(row => {
-                            // Normalize keys to lowercase to handle "Field" vs "field" etc.
-                            const normalizedRow = Object.fromEntries(
-                                Object.entries(row).map(([key, value]) => [key.toLowerCase(), value])
-                            );
-                            return {
-                                field: normalizedRow.field,
-                                text: normalizedRow.text,
-                            };
-                        })
-                        .filter(item => item.field && item.text); // Filter out empty/malformed rows
+                    const data = XLSX.utils.sheet_to_json<any[]>(sheet, { header: 1, range: 1 });
+                    return data
+                        .map(row => ({
+                            field: String(row[0] || ''),
+                            text: String(row[1] || ''),
+                        }))
+                        .filter(item => item.field && item.text);
                 };
 
                 const googleAds = parseSheet(googleSheet);
                 const metaAds = parseSheet(metaSheet);
+
+                if (googleAds.length === 0 && metaAds.length === 0) {
+                     reject(new Error("Could not find any valid ad copy data in the 'Google' or 'Meta' sheets. Please ensure data is in the first two columns."));
+                     return;
+                }
 
                 resolve({ googleAds, metaAds });
 
@@ -70,20 +70,30 @@ const parseAdCopyXLSX = (file: File): Promise<{ googleAds: AdCopy[], metaAds: Ad
     });
 };
 
+const getYoutubeVideoId = (url: string): string | null => {
+    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+    const match = url.match(regExp);
+    return (match && match[2].length === 11) ? match[2] : null;
+};
 
 const UploadView: React.FC<UploadViewProps> = ({
     projects, brandManagers, selectedProject, setSelectedProject,
     selectedBrandManager, setSelectedBrandManager,
     onAnalyze, onGenerate, onAddProject,
-    creativeFiles, setCreativeFiles, adCopyFile, setAdCopyFile,
+    creativeFiles, setCreativeFiles, youtubeUrls, setYoutubeUrls, adCopyFile, setAdCopyFile,
     workflowType, setWorkflowType
 }) => {
+    
+    const [youtubeInput, setYoutubeInput] = useState('');
+    const [showYoutubeInput, setShowYoutubeInput] = useState(false);
+    const imageInputRef = useRef<HTMLInputElement>(null);
+    const pdfInputRef = useRef<HTMLInputElement>(null);
     
     const handleProjectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
         const projectId = e.target.value;
         const project = projects.find(p => p.id === projectId) || null;
         setSelectedProject(project);
-        setSelectedBrandManager(null); // Reset manager when project changes
+        setSelectedBrandManager(null);
     };
 
     const handleProceed = async () => {
@@ -101,12 +111,101 @@ const UploadView: React.FC<UploadViewProps> = ({
         }
     };
     
+    const handleAddYoutubeUrl = () => {
+        if (youtubeInput && getYoutubeVideoId(youtubeInput) && !youtubeUrls.includes(youtubeInput)) {
+            setYoutubeUrls([...youtubeUrls, youtubeInput]);
+        }
+        setYoutubeInput('');
+        setShowYoutubeInput(false);
+    };
+
+    const handleFileAdd = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const newFiles = event.target.files;
+        if (newFiles) {
+            setCreativeFiles([...creativeFiles, ...Array.from(newFiles)]);
+        }
+        if(event.target) {
+            event.target.value = '';
+        }
+    };
+
+    const handleRemoveFile = (indexToRemove: number) => {
+        setCreativeFiles(creativeFiles.filter((_, index) => index !== indexToRemove));
+    };
+
+    const handleRemoveUrl = (indexToRemove: number) => {
+        setYoutubeUrls(youtubeUrls.filter((_, index) => index !== indexToRemove));
+    };
+    
     const assignedManagers = React.useMemo(() => {
         if (!selectedProject) return [];
         return brandManagers.filter(bm => bm.projectIds.includes(selectedProject.id));
     }, [selectedProject, brandManagers]);
 
-    const isProceedDisabled = !selectedProject || !selectedBrandManager || creativeFiles.length === 0 || (workflowType === 'update' && !adCopyFile);
+    const isProceedDisabled = !selectedProject || !selectedBrandManager || (creativeFiles.length === 0 && youtubeUrls.length === 0) || (workflowType === 'update' && !adCopyFile);
+
+    const renderSourceUploader = () => {
+        const hasSources = creativeFiles.length > 0 || youtubeUrls.length > 0;
+        return (
+            <div className="w-full h-full flex flex-col bg-gray-900/50 rounded-xl">
+                <div className="flex-1 overflow-y-auto custom-scrollbar p-2">
+                    {hasSources ? (
+                        <div className="grid grid-cols-2 gap-2">
+                           {creativeFiles.map((file, index) => {
+                                const isImage = file.type.startsWith('image/');
+                                return (
+                                     <div key={`${file.name}-${index}`} className="relative aspect-square bg-black/30 p-1 rounded-lg flex flex-col items-center justify-center text-center">
+                                        {isImage ? (
+                                            <img src={URL.createObjectURL(file)} alt="Preview" className="max-h-full max-w-full object-contain rounded-md"/>
+                                        ) : (
+                                            <div className="flex flex-col items-center justify-center text-gray-400">
+                                                <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clipRule="evenodd" /></svg>
+                                                <span className="text-xs mt-2 font-semibold">PDF</span>
+                                            </div>
+                                        )}
+                                        <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-60 text-white text-xs p-1 rounded-b-md"><p className="truncate">{file.name}</p></div>
+                                        <button onClick={() => handleRemoveFile(index)} className="absolute top-1 right-1 p-1 bg-gray-900/70 backdrop-blur-sm rounded-full text-gray-400 hover:bg-red-500/50 hover:text-white transition-colors transform hover:scale-110" aria-label="Remove"><svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg></button>
+                                    </div>
+                                );
+                           })}
+                           {youtubeUrls.map((url, index) => {
+                                const videoId = getYoutubeVideoId(url);
+                                return (
+                                    <div key={url} className="relative aspect-square bg-black/30 p-1 rounded-lg flex flex-col items-center justify-center text-center">
+                                        {videoId && <img src={`https://i3.ytimg.com/vi/${videoId}/hqdefault.jpg`} alt="YouTube thumbnail" className="max-h-full max-w-full object-contain rounded-md"/>}
+                                        <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-60 text-white text-xs p-1 rounded-b-md"><p className="truncate">{url}</p></div>
+                                        <button onClick={() => handleRemoveUrl(index)} className="absolute top-1 right-1 p-1 bg-gray-900/70 backdrop-blur-sm rounded-full text-gray-400 hover:bg-red-500/50 hover:text-white transition-colors transform hover:scale-110" aria-label="Remove"><svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg></button>
+                                    </div>
+                                );
+                           })}
+                        </div>
+                    ) : (
+                        <div className="flex items-center justify-center h-full text-center text-gray-500">
+                           <p>Add source material to get started.</p>
+                        </div>
+                    )}
+                </div>
+                <div className="flex-shrink-0 grid grid-cols-3 gap-2 p-2 border-t border-gray-700/50">
+                    <button onClick={() => imageInputRef.current?.click()} className="flex items-center justify-center space-x-2 py-2 px-3 rounded-md text-sm font-medium text-gray-300 bg-gray-700/50 hover:bg-gray-700 transition-colors"><svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clipRule="evenodd" /></svg><span>Add Images</span></button>
+                    <button onClick={() => pdfInputRef.current?.click()} className="flex items-center justify-center space-x-2 py-2 px-3 rounded-md text-sm font-medium text-gray-300 bg-gray-700/50 hover:bg-gray-700 transition-colors"><svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clipRule="evenodd" /></svg><span>Add PDF</span></button>
+                    <button onClick={() => setShowYoutubeInput(true)} className="flex items-center justify-center space-x-2 py-2 px-3 rounded-md text-sm font-medium text-gray-300 bg-gray-700/50 hover:bg-gray-700 transition-colors"><svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path d="M10 12a2 2 0 100-4 2 2 0 000 4z" /><path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.022 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" /></svg><span>YouTube URL</span></button>
+                </div>
+                <input type="file" ref={imageInputRef} onChange={handleFileAdd} accept="image/jpeg,image/png,image/webp" multiple className="hidden" />
+                <input type="file" ref={pdfInputRef} onChange={handleFileAdd} accept="application/pdf" multiple className="hidden" />
+                {showYoutubeInput && (
+                     <div className="absolute inset-0 bg-black/70 z-10 flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in" onClick={() => setShowYoutubeInput(false)}>
+                        <div className="bg-gray-800 rounded-lg p-4 w-full max-w-lg shadow-lg border border-gray-700 animate-fade-in-slide-up" onClick={e => e.stopPropagation()}>
+                           <h4 className="font-semibold text-white mb-2">Add YouTube URL</h4>
+                           <div className="flex space-x-2">
+                                <input type="url" value={youtubeInput} onChange={e => setYoutubeInput(e.target.value)} placeholder="https://www.youtube.com/watch?v=..." className="flex-1 bg-gray-900 border border-gray-600 rounded-md py-2 px-3 text-white focus:outline-none focus:ring-sky-500 focus:border-sky-500 sm:text-sm" />
+                                <button onClick={handleAddYoutubeUrl} className="py-2 px-4 bg-sky-600 text-white rounded-md font-semibold hover:bg-sky-700">Add</button>
+                           </div>
+                        </div>
+                    </div>
+                )}
+            </div>
+        );
+    }
 
     return (
         <div className="w-full p-4 sm:p-8 bg-gray-900 overflow-y-auto custom-scrollbar">
@@ -170,14 +269,18 @@ const UploadView: React.FC<UploadViewProps> = ({
                 {/* Right Column */}
                 <div className="lg:col-span-3 space-y-6">
                     <div className={`bg-gray-800 p-4 sm:p-6 rounded-xl border border-gray-700 h-64 transition-opacity duration-500 ${workflowType === 'update' || workflowType === 'generate' ? 'opacity-100' : 'opacity-50'}`}>
-                        <h3 className="text-lg font-semibold text-gray-100 mb-4">4. Upload Creative(s)</h3>
-                        <FileUpload 
-                            files={creativeFiles}
-                            onFilesChange={setCreativeFiles}
-                            multiple
-                        />
+                        <h3 className="text-lg font-semibold text-gray-100 mb-4">{workflowType === 'generate' ? '4. Upload Source Material' : '4. Upload Creative(s)'}</h3>
+                        {workflowType === 'generate' ? (
+                            renderSourceUploader()
+                        ) : (
+                            <FileUpload 
+                                files={creativeFiles}
+                                onFilesChange={setCreativeFiles}
+                                multiple
+                            />
+                        )}
                     </div>
-                     <div className={`bg-gray-800 p-4 sm:p-6 rounded-xl border border-gray-700 h-64 transition-opacity duration-500 ${workflowType === 'update' ? 'opacity-100' : 'opacity-50 pointer-events-none'}`}>
+                     <div className={`bg-gray-800 p-4 sm:p-6 rounded-xl border border-gray-700 h-64 transition-opacity duration-500 ${workflowType === 'update' ? 'opacity-100' : 'opacity-50 pointer-events-none'} ${workflowType === 'generate' ? 'hidden' : ''}`}>
                         <h3 className="text-lg font-semibold text-gray-100 mb-4">5. Upload Existing Ad Copy</h3>
                         <AdCopyUpload 
                             file={adCopyFile}

@@ -1,72 +1,37 @@
-import { GoogleGenAI, Part, Type } from "@google/genai";
-import { AdCopy, Project } from "../types";
+import { GoogleGenAI, Type } from "@google/genai";
+import { AdCopy, Project, VerificationResult } from '../types';
 
-// According to guidelines, API key must be from process.env.API_KEY
+// FIX: Initialize the Gemini AI client.
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+const model = "gemini-2.5-flash";
 
-// Helper to convert File to a Gemini Part
-async function fileToGenerativePart(file: File): Promise<Part> {
-  const base64EncodedData = await new Promise<string>((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onloadend = () => resolve((reader.result as string).split(',')[1]);
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
-  return {
-    inlineData: {
-      data: base64EncodedData,
-      mimeType: file.type,
-    },
-  };
-}
-
-export const analyzeCreatives = async (
-    project: Project,
-    creativeFiles: File[],
-    googleAds?: AdCopy[],
-    metaAds?: AdCopy[],
-): Promise<string> => {
-    const imageParts = await Promise.all(creativeFiles.map(fileToGenerativePart));
-
-    let prompt = `Analyze the following ad creative(s) for the Godrej Properties project: "${project.name}" located in ${project.location}, ${project.city}.
-
-    **Project Details:**
-    - Name: ${project.name}
-    - Location: ${project.location}, ${project.city}
-
-    **Analysis Task:**
-    1.  **Visual Analysis:** Describe the key visual elements, mood, and target audience suggested by the image(s).
-    2.  **Copy Analysis (if provided):** Review the existing ad copy for Google and Meta. Assess its alignment with the visuals, brand voice, and project details. Identify strengths and weaknesses.
-    3.  **Key Selling Points:** Based on the visuals and project context, identify the top 3-5 unique selling propositions (USPs) that should be highlighted.
-    4.  **Recommendations:** Provide actionable recommendations for improving the ad copy to maximize engagement and conversion. Focus on clarity, emotional appeal, and a strong call-to-action.
-
-    Format your response in clear, concise markdown. Use bold headings for each section.
-    `;
-
-    if (googleAds && googleAds.length > 0) {
-        prompt += '\n\n**Existing Google Ads Copy:**\n';
-        prompt += googleAds.map(ad => `- ${ad.field}: ${ad.text}`).join('\n');
-    }
-    if (metaAds && metaAds.length > 0) {
-        prompt += '\n\n**Existing Meta Ads Copy:**\n';
-        prompt += metaAds.map(ad => `- ${ad.field}: ${ad.text}`).join('\n');
-    }
-
-    const contents = { parts: [...imageParts, { text: prompt }] };
-
-    const response = await ai.models.generateContent({
-        model: 'gemini-2.5-pro',
-        contents: contents,
+/**
+ * Converts a File object to a GoogleGenerativeAI.Part object.
+ * @param file The file to convert.
+ * @returns A promise that resolves to a Part object.
+ */
+const fileToGenerativePart = async (file: File) => {
+    const base64EncodedData = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve((reader.result as string).split(',')[1]);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
     });
 
-    return response.text;
+    return {
+        inlineData: {
+            data: base64EncodedData,
+            mimeType: file.type,
+        },
+    };
 };
 
-
-const adCopyResponseSchema = {
+// FIX: Define the response schema for ad copy generation/analysis.
+const adCopySchema = {
     type: Type.OBJECT,
     properties: {
-        googleAds: {
+        analysis: { type: Type.STRING },
+        updatedGoogleCopy: {
             type: Type.ARRAY,
             items: {
                 type: Type.OBJECT,
@@ -77,7 +42,7 @@ const adCopyResponseSchema = {
                 required: ['field', 'text'],
             },
         },
-        metaAds: {
+        updatedMetaCopy: {
             type: Type.ARRAY,
             items: {
                 type: Type.OBJECT,
@@ -89,154 +54,172 @@ const adCopyResponseSchema = {
             },
         },
     },
-    required: ['googleAds', 'metaAds'],
+    required: ['analysis', 'updatedGoogleCopy', 'updatedMetaCopy'],
 };
 
 
+/**
+ * Analyzes new creatives against existing ad copy.
+ * @param creativeFiles - The new image files.
+ * @param googleAds - Existing Google Ads copy.
+ * @param metaAds - Existing Meta Ads copy.
+ * @param project - The project details.
+ * @returns An object containing the analysis and updated ad copy.
+ */
+export const analyzeAdCopy = async (
+    creativeFiles: File[],
+    googleAds: AdCopy[],
+    metaAds: AdCopy[],
+    project: Project
+): Promise<{ analysis: string; updatedGoogleCopy: AdCopy[]; updatedMetaCopy: AdCopy[] }> => {
+    
+    const imageParts = await Promise.all(creativeFiles.map(fileToGenerativePart));
+
+    const prompt = `You are an expert digital marketing strategist for Godrej Properties, a luxury real estate developer.
+Your task is to analyze new ad creatives and suggest updates to existing Google Ads and Meta Ads copy to align with the new visual assets.
+
+**Project Details:**
+- Project Name: ${project.name}
+- Location: ${project.location}, ${project.city}
+- Key Links: ${JSON.stringify(project.links, null, 2)}
+
+**Existing Google Ads Copy:**
+${JSON.stringify(googleAds, null, 2)}
+
+**Existing Meta Ads Copy:**
+${JSON.stringify(metaAds, null, 2)}
+
+**Instructions:**
+1.  **Analyze the new creative(s) provided.** Identify the key themes, selling points, and visual elements (e.g., amenities, lifestyle, architecture, specific offers).
+2.  **Critique the existing ad copy.** Assess how well it complements the new creative(s). Identify gaps or misalignments.
+3.  **Provide a concise analysis.** Summarize your findings in a brief report (3-4 bullet points).
+4.  **Suggest updated ad copy.** Rewrite the Google Ads and Meta Ads copy to be more effective with the new creative(s). Maintain the original structure (field names) for both platforms. Ensure the copy is compelling, brand-aligned, and drives action.
+
+Return a single JSON object with the specified schema.`;
+
+    const response = await ai.models.generateContent({
+        model: model,
+        contents: { parts: [...imageParts, { text: prompt }] },
+        config: {
+            responseMimeType: "application/json",
+            responseSchema: adCopySchema,
+        }
+    });
+
+    return JSON.parse(response.text);
+};
+
+/**
+ * Generates new ad copy from creatives.
+ * @param creativeFiles - The new image/pdf files.
+ * @param youtubeUrls - The YouTube video URLs.
+ * @param project - The project details.
+ * @returns An object containing the analysis and new ad copy.
+ */
 export const generateAdCopy = async (
-    project: Project,
-    analysis: string,
-): Promise<{ googleAds: AdCopy[], metaAds: AdCopy[] }> => {
-    
-    const prompt = `Based on the following project information and creative analysis, generate compelling ad copy for Google Ads and Meta Ads.
+    creativeFiles: File[],
+    youtubeUrls: string[],
+    project: Project
+): Promise<{ analysis: string; updatedGoogleCopy: AdCopy[]; updatedMetaCopy: AdCopy[] }> => {
 
-    **Project Information:**
-    - Project Name: ${project.name}
-    - Location: ${project.location}, ${project.city}
+    const imageParts = await Promise.all(creativeFiles.map(fileToGenerativePart));
 
-    **Creative Analysis & Recommendations:**
-    ${analysis}
+    const youtubePrompt = youtubeUrls.length > 0 
+        ? `\n**Source YouTube URLs for additional context:**\n${youtubeUrls.map(url => `- ${url}`).join('\n')}` 
+        : '';
 
-    **Task:**
-    Generate ad copy that is engaging, on-brand for Godrej Properties (premium, trustworthy, aspirational), and tailored to each platform's best practices.
+    const prompt = `You are an expert digital marketing copywriter for Godrej Properties, a luxury real estate developer.
+Your task is to generate new Google Ads and Meta Ads copy based on the provided ad creatives, source materials, and project details.
 
-    **Output Structure & Rules:**
-    1.  Provide your response as a single, valid JSON object matching the provided schema.
-    2.  For **Google Ads**, provide text for the fields: "Headline 1", "Headline 2", "Headline 3", "Description 1", "Description 2". Adhere to character limits (30 for headlines, 90 for descriptions).
-    3.  For **Meta Ads**, provide text for the fields: "Primary Text", "Headline", and "Description". Adhere to character limits (40 for headline, 30 for description). The Primary Text can be longer.
-    4.  Ensure you provide distinct, appropriate content for Meta and do not just reuse the Google Ads structure.`;
+**Project Details:**
+- Project Name: ${project.name}
+- Location: ${project.location}, ${project.city}
+- Key Links: ${JSON.stringify(project.links, null, 2)}${youtubePrompt}
+
+**Instructions:**
+1.  **Analyze all the provided source material.** This includes images, PDFs, and content from any YouTube URLs. Identify the key themes, selling points, and visual elements (e.g., amenities, lifestyle, architecture, specific offers).
+2.  **Write a brief creative analysis.** Explain the strategy behind the copy you are about to write, based on all source materials (2-3 bullet points).
+3.  **Generate complete ad copy for Google Ads.** Provide copy for the following fields: Headline 1, Headline 2, Headline 3, Description 1, Description 2.
+4.  **Generate complete ad copy for Meta Ads.** Provide copy for the following fields: Primary Text, Headline, Description.
+5.  **Ensure the copy is compelling, brand-aligned, and drives action.** Use a tone that is sophisticated and aspirational.
+
+Return a single JSON object with the specified schema.`;
 
     const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
-        contents: prompt,
+        model: model,
+        contents: { parts: [...imageParts, { text: prompt }] },
         config: {
-            responseMimeType: 'application/json',
-            responseSchema: adCopyResponseSchema,
-        },
+            responseMimeType: "application/json",
+            responseSchema: adCopySchema,
+        }
     });
 
-    try {
-        const jsonText = response.text.trim();
-        return JSON.parse(jsonText);
-    } catch(e) {
-        console.error("Failed to parse JSON from Gemini for ad copy generation:", response.text);
-        throw new Error("Received invalid JSON from the API.");
-    }
+    return JSON.parse(response.text);
 };
 
-export const updateAdCopy = async (
-    project: Project,
-    analysis: string,
-    originalGoogleAds: AdCopy[],
-    originalMetaAds: AdCopy[],
-): Promise<{ googleAds: AdCopy[], metaAds: AdCopy[] }> => {
 
-    const prompt = `Based on the following project information, creative analysis, and original ad copy, provide updated and improved ad copy for Google Ads and Meta Ads.
-
-    **Project Information:**
-    - Project Name: ${project.name}
-    - Location: ${project.location}, ${project.city}
-
-    **Creative Analysis & Recommendations:**
-    ${analysis}
-
-    **Original Google Ads Copy:**
-    ${originalGoogleAds.map(ad => `- ${ad.field}: ${ad.text}`).join('\n')}
-
-    **Original Meta Ads Copy:**
-    ${originalMetaAds.map(ad => `- ${ad.field}: ${ad.text}`).join('\n')}
-
-    **Task:**
-    Revise the original ad copy based on the recommendations in the analysis. Your primary goal is to perform a surgical update, only changing facts or phrases mentioned in the analysis. Preserve the original brand voice and structure as much as possible.
-
-    **Output Structure & Rules:**
-    1.  Provide your response as a single, valid JSON object.
-    2.  For **Google Ads**, provide updated text for the fields: "Headline 1", "Headline 2", "Headline 3", "Description 1", "Description 2". Adhere to character limits (30 for headlines, 90 for descriptions).
-    3.  For **Meta Ads**, provide updated text for the fields: "Primary Text", "Headline", and "Description". Adhere to character limits (40 for headline, 30 for description). The Primary Text can be longer. Ensure you provide distinct, appropriate content for Meta and do not just reuse the Google Ads structure.
-
-    Output the result as a single JSON object with the updated copy, matching the provided schema.`;
+/**
+ * Verifies if a URL's content aligns with an analysis summary.
+ * @param url - The URL to verify.
+ * @param analysis - The analysis of expected changes.
+ * @returns A VerificationResult object.
+ */
+export const verifyUrl = async (url: string, analysis: string): Promise<Omit<VerificationResult, 'url' | 'name'>> => {
     
-    const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
-        contents: prompt,
-        config: {
-            responseMimeType: 'application/json',
-            responseSchema: adCopyResponseSchema,
-        },
-    });
+    const prompt = `You are a quality assurance agent. Your task is to verify if a webpage's content aligns with a given analysis summary.
+Use the provided web search results for the URL to make your determination.
 
-    try {
-        const jsonText = response.text.trim();
-        return JSON.parse(jsonText);
-    } catch(e) {
-        console.error("Failed to parse JSON from Gemini for ad copy update:", response.text);
-        throw new Error("Received invalid JSON from the API.");
-    }
-};
+**URL to check:** ${url}
 
-export const verifyUrl = async (
-    url: string,
-    analysis: string,
-): Promise<{ verified: boolean; reason: string; error?: boolean }> => {
-    
-    const prompt = `You are a content verifier. Your task is to check if a live webpage reflects the key points from a creative analysis.
+**Analysis of expected changes:**
+"${analysis}"
 
-    **Creative Analysis Summary:**
-    ${analysis}
+**Instructions:**
+1.  Based on the content of the URL from the search results, determine if the key points from the "Analysis of expected changes" are reflected on the page.
+2.  Provide a "Yes" or "No" answer for the 'verified' field.
+3.  Provide a concise, one-sentence reason for your answer. If the changes are not reflected, explain what is missing.
 
-    **Webpage to Verify:**
-    ${url}
-
-    **Verification Task:**
-    1. Access the content of the provided URL.
-    2. Compare the webpage's content against the **Creative Analysis Summary**.
-    3. Determine if the key selling points, tone, and offers from the analysis are present and accurately represented on the webpage.
-    4. On the first line, respond with only one word: "VERIFIED" or "UNVERIFIED".
-    5. On the second line, provide a brief, one-sentence explanation for your decision.
-
-    Example response for a verified case:
-    VERIFIED
-    The page correctly highlights the sea views and spacious 3 BHK configurations.
-    
-    Example response for an unverified case:
-    UNVERIFIED
-    The key selling point about world-class amenities is not mentioned on the page.`;
+Return ONLY a single, valid JSON object with the following structure: { "verified": boolean, "reason": string }. Do not include any other text or markdown formatting.`;
 
     try {
         const response = await ai.models.generateContent({
-            model: 'gemini-2.5-flash',
+            model: model,
             contents: prompt,
             config: {
-                tools: [{googleSearch: {}}],
-            },
+                tools: [{ googleSearch: {} }],
+            }
         });
-        
-        const text = response.text;
-        const lines = text.trim().split('\n');
-        if (lines.length < 1) {
-            return { verified: false, reason: 'Could not determine verification status from API response.', error: true };
-        }
-        const status = lines[0].trim().toUpperCase();
-        const reason = lines.slice(1).join(' ').trim();
-        
-        return {
-            verified: status === 'VERIFIED',
-            reason: reason || (status === 'VERIFIED' ? 'Content aligns with analysis.' : 'Content does not align with analysis.'),
-        };
 
-    } catch (e) {
-        console.error("Error verifying URL:", e);
-        const errorMessage = e instanceof Error ? e.message : "An unknown error occurred";
-        return { verified: false, reason: `API Error: ${errorMessage}`, error: true };
+        // The response text might contain markdown and other text. We need to extract the JSON object.
+        let text = response.text;
+        
+        // First, try to find a JSON block inside markdown
+        const markdownMatch = text.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+        if (markdownMatch && markdownMatch[1]) {
+            text = markdownMatch[1];
+        }
+
+        // Then, find the JSON object within the potentially cleaned text
+        const jsonObjectMatch = text.match(/{[\s\S]*}/);
+
+        if (jsonObjectMatch && jsonObjectMatch[0]) {
+            const result = JSON.parse(jsonObjectMatch[0]);
+            return {
+                verified: result.verified,
+                reason: result.reason,
+                error: false,
+            };
+        }
+        
+        // If no JSON object is found, throw an error.
+        throw new Error('Could not parse JSON from the model response.');
+
+    } catch (error: any) {
+        console.error(`Error verifying URL ${url}:`, error);
+        return {
+            verified: false,
+            reason: error.message || 'An error occurred during verification.',
+            error: true,
+        };
     }
 };

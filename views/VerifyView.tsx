@@ -103,30 +103,35 @@ const VerifyView: React.FC<VerifyViewProps> = ({
         }
     };
 
-    const handleExport = () => {
+    const handleExport = async () => {
         if (project) {
-            exportAdCopyToExcel(updatedGoogleAds, updatedMetaAds, project.name);
-            addLog(project.name, "Approved ad copy has been exported.");
+            try {
+                await exportAdCopyToExcel(updatedGoogleAds, updatedMetaAds, project.name);
+                addLog(project.name, "Approved ad copy has been exported.");
+            } catch (err) {
+                console.error("Export failed:", err);
+                alert("Failed to export the Excel file. Please try again.");
+            }
         } else {
             alert("Cannot export copy without a selected project.");
         }
     };
 
     return (
-        <div className="w-full p-4 sm:p-8 bg-gray-900 overflow-y-auto custom-scrollbar">
+        <div className="w-full h-full flex flex-col p-4 sm:p-8 bg-gray-900">
             <div className="flex-shrink-0 mb-6 sm:mb-8">
                 <h1 className="text-2xl sm:text-3xl font-bold text-gray-100">Verify & Export</h1>
                 <p className="text-gray-400 mt-2">Verify that the approved changes are live on the project websites before exporting.</p>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div className="lg:col-span-1 space-y-6">
+            <div className="flex-1 grid grid-cols-1 lg:grid-cols-3 gap-6 overflow-hidden">
+                <div className="lg:col-span-1 space-y-6 overflow-y-auto custom-scrollbar pr-2">
                     <ImagePreview imageUrls={imageUrls} isCompact />
                     <AnalysisResult analysis={analysis} isCompact />
                 </div>
 
-                <div className="lg:col-span-2 space-y-6">
-                    <div className="bg-gray-800 p-6 rounded-xl border border-gray-700">
+                <div className="lg:col-span-2 flex flex-col space-y-6 overflow-hidden">
+                    <div className="bg-gray-800 p-6 rounded-xl border border-gray-700 flex flex-col">
                         <h3 className="text-lg font-semibold text-gray-100 mb-3">1. Select URLs to Verify</h3>
                         <div className="space-y-3 max-h-64 overflow-y-auto custom-scrollbar pr-2 -mr-2">
                             {availableLinks.map(link => (
@@ -150,14 +155,16 @@ const VerifyView: React.FC<VerifyViewProps> = ({
                             {isVerifying ? `Verifying... (${verificationProgress}/${selectedLinks.length})` : `Verify ${selectedLinks.length} Selected URLs`}
                         </button>
                     </div>
-                    <div className="bg-gray-800 p-6 rounded-xl border border-gray-700">
-                        <h3 className="text-lg font-semibold text-gray-100 mb-3">2. Verification Results</h3>
-                        <VerificationResultDisplay results={verificationResults} />
+                    <div className="bg-gray-800 p-6 rounded-xl border border-gray-700 flex-1 flex flex-col overflow-hidden">
+                        <h3 className="text-lg font-semibold text-gray-100 mb-3 flex-shrink-0">2. Verification Results</h3>
+                        <div className="flex-1 overflow-y-auto custom-scrollbar -mr-2 pr-2">
+                            <VerificationResultDisplay results={verificationResults} />
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <div className="mt-8 flex justify-between items-center">
+            <div className="flex-shrink-0 mt-8 flex justify-between items-center">
                 <button
                     onClick={onBack}
                     className="py-2 px-5 bg-gray-700 text-gray-200 font-semibold rounded-lg shadow-sm border border-gray-600 hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 focus:ring-sky-500 transition-all transform hover:-translate-y-0.5 active:translate-y-0"
